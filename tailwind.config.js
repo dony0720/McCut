@@ -25,6 +25,17 @@ export default {
           'system-ui',
           'sans-serif',
         ],
+        gaegu: ['Gaegu', 'cursive'],
+      },
+      colors: {
+        cream: {
+          50: '#fdfaf5',
+          100: '#faf3e8',
+          200: '#f5e6d0',
+          300: '#edd4b0',
+        },
+        ink: '#1a1614',
+        coral: '#e8573a',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in-out',
