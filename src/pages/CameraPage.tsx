@@ -13,7 +13,7 @@ export default function CameraPage() {
   const webcamRef = useRef<Webcam>(null)
 
   const [facing, setFacing] = useState<'user' | 'environment'>('user')
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null)
+  const [cameraError, setCameraError] = useState<'permission' | 'other' | null>(null)
   const [captureFlash, setCaptureFlash] = useState(false)
   const [viewfinderBlink, setViewfinderBlink] = useState(false)
   const [filledBars, setFilledBars] = useState<number[]>([])
@@ -33,8 +33,24 @@ export default function CameraPage() {
     prevShotCount.current = shotCount
   }, [shotCount])
 
-  const handleUserMedia = useCallback(() => setHasPermission(true), [])
-  const handleUserMediaError = useCallback(() => setHasPermission(false), [])
+  const handleUserMedia = useCallback(() => {
+    setCameraError(null)
+  }, [])
+
+  const handleUserMediaError = useCallback((err: string | DOMException) => {
+    const name = typeof err === 'string' ? err : err.name
+
+    if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+      // 실제 권한 거부 — 설정에서만 복구 가능
+      setCameraError('permission')
+    } else if (name === 'OverconstrainedError' || name === 'ConstraintNotSatisfiedError') {
+      // facingMode 등 제약 조건 실패 → 전면 카메라로 폴백, Webcam 유지
+      setFacing('user')
+    } else {
+      // 장치 오류 등 일시적 실패 — 소프트 오버레이만 표시
+      setCameraError('other')
+    }
+  }, [])
 
   const triggerCaptureEffect = useCallback(() => {
     setCaptureFlash(true)
@@ -83,7 +99,7 @@ export default function CameraPage() {
   }, [flashVisible, triggerCaptureEffect])
 
   function handleShutter() {
-    if (shotCount >= TOTAL_SHOTS || hasPermission === false) return
+    if (shotCount >= TOTAL_SHOTS || cameraError === 'permission') return
 
     if (autoActiveRef.current || isRunning) {
       autoActiveRef.current = false
@@ -97,7 +113,7 @@ export default function CameraPage() {
   void capture
 
   const isActive = autoActiveRef.current || isRunning
-  const isDisabled = shotCount >= TOTAL_SHOTS || hasPermission === false
+  const isDisabled = shotCount >= TOTAL_SHOTS || cameraError === 'permission'
 
   return (
     <div className="min-h-screen bg-[#1c1814] flex flex-col items-center">
@@ -189,7 +205,8 @@ export default function CameraPage() {
             <div className="absolute bottom-3 right-3 w-6 h-6 md:w-7 md:h-7 border-b-[2.5px] border-r-[2.5px] border-white/60 rounded-br-md z-10" />
 
             {/* 카메라 스트림 */}
-            {hasPermission === false ? (
+            {cameraError === 'permission' ? (
+              /* 실제 권한 거부 — 브라우저 설정에서만 복구 가능 */
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-8 text-center">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="opacity-40">
                   <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -199,17 +216,31 @@ export default function CameraPage() {
                 <p className="text-white/40 text-xs md:text-sm">브라우저 설정에서 카메라를 허용해주세요</p>
               </div>
             ) : (
-              <Webcam
-                ref={webcamRef}
-                audio={false}
-                screenshotFormat="image/jpeg"
-                screenshotQuality={0.92}
-                mirrored={facing === 'user'}
-                videoConstraints={{ facingMode: facing, aspectRatio: 3 / 4 }}
-                onUserMedia={handleUserMedia}
-                onUserMediaError={handleUserMediaError}
-                className="w-full h-full object-cover"
-              />
+              <>
+                <Webcam
+                  ref={webcamRef}
+                  audio={false}
+                  screenshotFormat="image/jpeg"
+                  screenshotQuality={0.92}
+                  mirrored={facing === 'user'}
+                  videoConstraints={{ facingMode: facing, aspectRatio: 3 / 4 }}
+                  onUserMedia={handleUserMedia}
+                  onUserMediaError={handleUserMediaError}
+                  className="w-full h-full object-cover"
+                />
+                {/* 일시적 오류 — 소프트 오버레이 + 재시도 (Webcam 유지) */}
+                {cameraError === 'other' && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/60 z-10">
+                    <p className="text-white/80 text-sm md:text-base">카메라를 불러오지 못했습니다</p>
+                    <button
+                      onClick={() => setCameraError(null)}
+                      className="px-5 py-2.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-sm font-semibold transition-all active:scale-95"
+                    >
+                      다시 시도
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
