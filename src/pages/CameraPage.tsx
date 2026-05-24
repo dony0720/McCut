@@ -13,6 +13,7 @@ export default function CameraPage() {
   const webcamRef = useRef<Webcam>(null)
 
   const [facing, setFacing] = useState<'user' | 'environment'>('user')
+  const [isStreamReady, setIsStreamReady] = useState(false)
   const [cameraError, setCameraError] = useState<'permission' | 'other' | null>(null)
   const [captureFlash, setCaptureFlash] = useState(false)
   const [viewfinderBlink, setViewfinderBlink] = useState(false)
@@ -34,6 +35,7 @@ export default function CameraPage() {
   }, [shotCount])
 
   const handleUserMedia = useCallback(() => {
+    setIsStreamReady(true)
     setCameraError(null)
   }, [])
 
@@ -99,7 +101,7 @@ export default function CameraPage() {
   }, [flashVisible, triggerCaptureEffect])
 
   function handleShutter() {
-    if (shotCount >= TOTAL_SHOTS || cameraError === 'permission') return
+    if (shotCount >= TOTAL_SHOTS || !isStreamReady || cameraError === 'permission') return
 
     if (autoActiveRef.current || isRunning) {
       autoActiveRef.current = false
@@ -113,7 +115,7 @@ export default function CameraPage() {
   void capture
 
   const isActive = autoActiveRef.current || isRunning
-  const isDisabled = shotCount >= TOTAL_SHOTS || cameraError === 'permission'
+  const isDisabled = shotCount >= TOTAL_SHOTS || !isStreamReady || cameraError === 'permission'
 
   return (
     <div className="min-h-screen bg-[#1c1814] flex flex-col items-center">
@@ -133,7 +135,7 @@ export default function CameraPage() {
 
           {/* 카메라 전환 */}
           <button
-            onClick={() => { autoActiveRef.current = false; cancelCountdown(); setFacing(f => f === 'user' ? 'environment' : 'user') }}
+            onClick={() => { autoActiveRef.current = false; cancelCountdown(); setIsStreamReady(false); setFacing(f => f === 'user' ? 'environment' : 'user') }}
             className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 flex items-center justify-center transition-all active:scale-90 hover:bg-white/20"
             aria-label="카메라 전환"
           >
