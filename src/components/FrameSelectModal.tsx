@@ -138,7 +138,7 @@ export default function FrameSelectModal({ onClose, onConfirm }: Props) {
           ) : (
             <>
               {/* ── Step 2: 배경 선택 ── */}
-              <div className="flex items-start justify-between mb-4 md:mb-6">
+              <div className="flex items-start justify-between mb-5 md:mb-7">
                 <div className="flex-1 min-w-0">
                   <button
                     onClick={() => goToStep('frame', 'back')}
@@ -152,8 +152,11 @@ export default function FrameSelectModal({ onClose, onConfirm }: Props) {
                   <h2 className="font-gaegu font-bold text-ink text-3xl md:text-4xl tracking-[0.03em]">
                     배경 고르기
                   </h2>
+                  {/* 선택된 배경 인라인 표시 */}
                   <p className="text-ink/50 text-sm md:text-base mt-0.5">
-                    사진 배경 이미지를 골라봐!
+                    {BG_OPTIONS.find((o) => o.id === state.bgId)
+                      ? <><span className="text-coral font-semibold">{BG_OPTIONS.find((o) => o.id === state.bgId)?.label}</span> 선택됨</>
+                      : '사진 배경 이미지를 골라봐!'}
                   </p>
                 </div>
                 <button
@@ -167,31 +170,8 @@ export default function FrameSelectModal({ onClose, onConfirm }: Props) {
                 </button>
               </div>
 
-              {/* 선택된 배경 미리보기 칩 */}
-              {(() => {
-                const current = BG_OPTIONS.find((o) => o.id === state.bgId)
-                return current ? (
-                  <div className="flex items-center gap-2 mb-4 md:mb-5 px-3 py-2 bg-ink/5 rounded-xl w-fit">
-                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg overflow-hidden border border-ink/10 shrink-0">
-                      <img
-                        src={current.imagePath}
-                        alt={current.label}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <span className="font-gaegu font-bold text-ink text-sm md:text-base">
-                      {current.label} 선택됨
-                    </span>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-coral shrink-0">
-                      <circle cx="7" cy="7" r="6" fill="#e8573a"/>
-                      <polyline points="4,7 6.5,9.5 10.5,4.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                ) : null
-              })()}
-
               {/* 배경 선택 그리드 */}
-              <div className="mb-5 md:mb-7">
+              <div className="mb-6 md:mb-8">
                 <BgSelectGrid
                   selected={state.bgId}
                   onSelect={setBgId}

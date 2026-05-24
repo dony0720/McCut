@@ -70,7 +70,7 @@ function BgThumb({ opt, isSelected, onSelect }: {
 
 export default function BgSelectGrid({ selected, onSelect }: Props) {
   return (
-    <div className="grid grid-cols-4 gap-2 md:gap-3">
+    <div className="grid grid-cols-3 gap-2.5 md:gap-3">
       {BG_OPTIONS.map((opt) => (
         <BgThumb
           key={opt.id}
