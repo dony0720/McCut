@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useApp } from '@/context/AppContext'
 import type { FrameOption } from '@/types'
 import { useModalClose } from '@/hooks/useModalClose'
@@ -15,10 +16,20 @@ const FRAME_OPTIONS: FrameOption[] = [
   { id: 'mint',    label: '와이드', sub: '1 + 2' },
 ]
 
+type Step = 'frame' | 'bg'
+
 export default function FrameSelectModal({ onClose, onConfirm }: Props) {
   const { state, setFrameStyle } = useApp()
   const selected = state.frameStyle
   const { isClosing, handleClose } = useModalClose(onClose)
+
+  const [step, setStep] = useState<Step>('frame')
+  const [stepAnim, setStepAnim] = useState<'enter-right' | 'enter-left' | ''>('enter-right')
+
+  function goToStep(next: Step, direction: 'forward' | 'back') {
+    setStepAnim(direction === 'forward' ? 'enter-right' : 'enter-left')
+    setStep(next)
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
@@ -34,93 +45,141 @@ export default function FrameSelectModal({ onClose, onConfirm }: Props) {
       {/* 모달 시트 */}
       <div
         className={[
-          'relative w-full max-w-sm md:max-w-lg bg-cream-100',
+          'relative w-full max-w-sm md:max-w-lg bg-cream-100 overflow-hidden',
           'rounded-t-3xl md:rounded-3xl',
           'border-t-[3px] md:border-[3px] border-x-[3px] border-ink',
-          'px-6 md:px-10 pt-6 pb-8 md:pb-10',
           isClosing ? 'modal-sheet-out' : 'modal-sheet-in',
         ].join(' ')}
       >
-        {/* 핸들 바 (모바일 only) */}
-        <div className="w-10 h-1 bg-ink/20 rounded-full mx-auto mb-5 md:hidden" />
-
-        {/* 헤더 */}
-        <div className="flex items-start justify-between mb-5 md:mb-7">
-          <div>
-            <h2 className="font-gaegu font-bold text-ink text-3xl md:text-4xl tracking-[0.03em]">
-              프레임 고르기
-            </h2>
-            <p className="text-ink/50 text-sm md:text-base mt-0.5">
-              마음에 드는 컷 스타일을 골라봐!
-            </p>
-          </div>
-          <button
-            onClick={handleClose}
-            className="w-9 h-9 md:w-11 md:h-11 rounded-full border-[2.5px] border-ink flex items-center justify-center transition-all active:scale-90 hover:bg-ink/5 mt-1 shrink-0"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <line x1="1" y1="1" x2="13" y2="13" stroke="#1a1614" strokeWidth="2.2" strokeLinecap="round"/>
-              <line x1="13" y1="1" x2="1" y2="13" stroke="#1a1614" strokeWidth="2.2" strokeLinecap="round"/>
-            </svg>
-          </button>
+        {/* 스텝 인디케이터 */}
+        <div className="flex gap-1.5 justify-center pt-5 md:pt-6 pb-1 md:hidden">
+          <div className={`h-1 rounded-full transition-all duration-300 ${step === 'frame' ? 'w-6 bg-ink' : 'w-2 bg-ink/20'}`} />
+          <div className={`h-1 rounded-full transition-all duration-300 ${step === 'bg' ? 'w-6 bg-ink' : 'w-2 bg-ink/20'}`} />
         </div>
 
-        {/* 프레임 카드 그리드 */}
-        <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6 md:mb-8">
-          {FRAME_OPTIONS.map((opt) => {
-            const isSelected = selected === opt.id
-            return (
-              <button
-                key={opt.id}
-                onClick={() => setFrameStyle(opt.id)}
-                className={[
-                  'relative rounded-2xl border-[3px] overflow-hidden bg-cream-50',
-                  'transition-all duration-150 active:scale-95',
-                  isSelected
-                    ? 'border-coral shadow-[0_0_0_2px_#e8573a20]'
-                    : 'border-ink/20 hover:border-ink/40',
-                ].join(' ')}
-              >
-                {/* 미리보기 */}
-                <div className="p-2 md:p-3">
-                  <FramePreview variant={opt.id} />
-                </div>
-
-                {/* 라벨 */}
-                <div className="px-3 pb-3 md:px-4 md:pb-4 text-left">
-                  <p className="font-gaegu font-bold text-ink text-base md:text-lg leading-tight">
-                    {opt.label}
-                  </p>
-                  <p className="text-ink/40 text-xs md:text-sm">{opt.sub}</p>
-                </div>
-
-                {/* 선택 체크마크 */}
-                {isSelected && (
-                  <div className="anim-check-bounce absolute top-2 left-2 w-6 h-6 md:w-7 md:h-7 rounded-full bg-coral border-[2px] border-white flex items-center justify-center shadow-sm">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                )}
-
-                {/* NEW 뱃지 */}
-                {opt.isNew && (
-                  <div className="absolute top-2 right-2 bg-[#f5c842] border-[2px] border-ink rounded-md px-1.5 py-0.5">
-                    <span className="font-gaegu font-bold text-ink text-[0.6rem] md:text-xs tracking-wide">NEW</span>
-                  </div>
-                )}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* 확인 버튼 */}
-        <button
-          onClick={onConfirm}
-          className="w-full py-4 md:py-5 bg-ink text-cream-100 font-gaegu font-bold text-xl md:text-2xl rounded-full border-[3px] border-ink transition-all duration-150 active:scale-95 hover:bg-ink/80"
+        {/* 스텝 콘텐츠 래퍼 */}
+        <div
+          key={step}
+          className={[
+            'px-6 md:px-10 pt-4 md:pt-6 pb-8 md:pb-10',
+            stepAnim === 'enter-right' ? 'step-enter-right' : stepAnim === 'enter-left' ? 'step-enter-left' : '',
+          ].join(' ')}
         >
-          이 프레임으로 시작하기 →
-        </button>
+          {step === 'frame' ? (
+            <>
+              {/* ── Step 1: 프레임 선택 ── */}
+              <div className="flex items-start justify-between mb-5 md:mb-7">
+                <div>
+                  <h2 className="font-gaegu font-bold text-ink text-3xl md:text-4xl tracking-[0.03em]">
+                    프레임 고르기
+                  </h2>
+                  <p className="text-ink/50 text-sm md:text-base mt-0.5">
+                    마음에 드는 컷 스타일을 골라봐!
+                  </p>
+                </div>
+                <button
+                  onClick={handleClose}
+                  className="w-9 h-9 md:w-11 md:h-11 rounded-full border-[2.5px] border-ink flex items-center justify-center transition-all active:scale-90 hover:bg-ink/5 mt-1 shrink-0"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <line x1="1" y1="1" x2="13" y2="13" stroke="#1a1614" strokeWidth="2.2" strokeLinecap="round"/>
+                    <line x1="13" y1="1" x2="1" y2="13" stroke="#1a1614" strokeWidth="2.2" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6 md:mb-8">
+                {FRAME_OPTIONS.map((opt) => {
+                  const isSelected = selected === opt.id
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => setFrameStyle(opt.id)}
+                      className={[
+                        'relative rounded-2xl border-[3px] overflow-hidden bg-cream-50',
+                        'transition-all duration-150 active:scale-95',
+                        isSelected
+                          ? 'border-coral shadow-[0_0_0_2px_#e8573a20]'
+                          : 'border-ink/20 hover:border-ink/40',
+                      ].join(' ')}
+                    >
+                      <div className="p-2 md:p-3">
+                        <FramePreview variant={opt.id} />
+                      </div>
+                      <div className="px-3 pb-3 md:px-4 md:pb-4 text-left">
+                        <p className="font-gaegu font-bold text-ink text-base md:text-lg leading-tight">{opt.label}</p>
+                        <p className="text-ink/40 text-xs md:text-sm">{opt.sub}</p>
+                      </div>
+                      {isSelected && (
+                        <div className="anim-check-bounce absolute top-2 left-2 w-6 h-6 md:w-7 md:h-7 rounded-full bg-coral border-[2px] border-white flex items-center justify-center shadow-sm">
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                      )}
+                      {opt.isNew && (
+                        <div className="absolute top-2 right-2 bg-[#f5c842] border-[2px] border-ink rounded-md px-1.5 py-0.5">
+                          <span className="font-gaegu font-bold text-ink text-[0.6rem] md:text-xs tracking-wide">NEW</span>
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <button
+                onClick={() => goToStep('bg', 'forward')}
+                className="w-full py-4 md:py-5 bg-ink text-cream-100 font-gaegu font-bold text-xl md:text-2xl rounded-full border-[3px] border-ink transition-all duration-150 active:scale-95 hover:bg-ink/80"
+              >
+                다음 — 배경 고르기 →
+              </button>
+            </>
+          ) : (
+            <>
+              {/* ── Step 2: 배경 선택 (5-2에서 채움) ── */}
+              <div className="flex items-start justify-between mb-5 md:mb-7">
+                <div>
+                  <button
+                    onClick={() => goToStep('frame', 'back')}
+                    className="flex items-center gap-1.5 text-ink/50 hover:text-ink text-sm mb-2 transition-colors"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    프레임 다시 고르기
+                  </button>
+                  <h2 className="font-gaegu font-bold text-ink text-3xl md:text-4xl tracking-[0.03em]">
+                    배경 고르기
+                  </h2>
+                  <p className="text-ink/50 text-sm md:text-base mt-0.5">
+                    사진 배경 색상을 골라봐!
+                  </p>
+                </div>
+                <button
+                  onClick={handleClose}
+                  className="w-9 h-9 md:w-11 md:h-11 rounded-full border-[2.5px] border-ink flex items-center justify-center transition-all active:scale-90 hover:bg-ink/5 mt-1 shrink-0"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <line x1="1" y1="1" x2="13" y2="13" stroke="#1a1614" strokeWidth="2.2" strokeLinecap="round"/>
+                    <line x1="13" y1="1" x2="1" y2="13" stroke="#1a1614" strokeWidth="2.2" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              {/* 배경 UI — 5-2에서 구현 */}
+              <div className="min-h-[160px] md:min-h-[200px] flex items-center justify-center text-ink/30 text-sm mb-6 md:mb-8">
+                배경 옵션 준비 중…
+              </div>
+
+              <button
+                onClick={onConfirm}
+                className="w-full py-4 md:py-5 bg-ink text-cream-100 font-gaegu font-bold text-xl md:text-2xl rounded-full border-[3px] border-ink transition-all duration-150 active:scale-95 hover:bg-ink/80"
+              >
+                촬영 시작하기 →
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

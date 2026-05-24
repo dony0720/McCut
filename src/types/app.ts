@@ -1,4 +1,5 @@
 import type { FrameStyle } from './frame'
+import type { BgColor } from './bg'
 
 export interface AppState {
   /** 촬영된 8장의 사진 (data URL) */
@@ -7,6 +8,8 @@ export interface AppState {
   selectedIndices: number[]
   /** 선택된 프레임 스타일 */
   frameStyle: FrameStyle
+  /** 선택된 배경 색상 */
+  bgColor: BgColor
   /** Canvas 합성 결과 이미지 (data URL) */
   composedImage: string | null
   /** 공유용 고유 ID */

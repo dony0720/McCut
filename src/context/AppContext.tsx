@@ -5,9 +5,9 @@ import {
   useCallback,
   type ReactNode,
 } from 'react'
-import type { FrameStyle, AppState } from '@/types'
+import type { FrameStyle, AppState, BgColor } from '@/types'
 
-export type { FrameStyle, AppState }
+export type { FrameStyle, AppState, BgColor }
 
 // ─── Initial State ─────────────────────────────────────────────────────────────
 
@@ -15,6 +15,7 @@ const initialState: AppState = {
   capturedPhotos: [],
   selectedIndices: [],
   frameStyle: 'classic',
+  bgColor: 'cream',
   composedImage: null,
   shareId: null,
 }
@@ -26,6 +27,7 @@ type Action =
   | { type: 'SET_PHOTOS'; payload: string[] }
   | { type: 'TOGGLE_SELECT'; payload: number }
   | { type: 'SET_FRAME_STYLE'; payload: FrameStyle }
+  | { type: 'SET_BG_COLOR'; payload: BgColor }
   | { type: 'SET_COMPOSED_IMAGE'; payload: string }
   | { type: 'SET_SHARE_ID'; payload: string }
   | { type: 'RESET' }
@@ -53,6 +55,9 @@ function reducer(state: AppState, action: Action): AppState {
     case 'SET_FRAME_STYLE':
       return { ...state, frameStyle: action.payload }
 
+    case 'SET_BG_COLOR':
+      return { ...state, bgColor: action.payload }
+
     case 'SET_COMPOSED_IMAGE':
       return { ...state, composedImage: action.payload }
 
@@ -75,6 +80,7 @@ interface AppContextValue {
   setPhotos: (photos: string[]) => void
   toggleSelect: (index: number) => void
   setFrameStyle: (style: FrameStyle) => void
+  setBgColor: (color: BgColor) => void
   setComposedImage: (dataUrl: string) => void
   setShareId: (id: string) => void
   reset: () => void
@@ -103,6 +109,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_FRAME_STYLE', payload: style })
   }, [])
 
+  const setBgColor = useCallback((color: BgColor) => {
+    dispatch({ type: 'SET_BG_COLOR', payload: color })
+  }, [])
+
   const setComposedImage = useCallback((dataUrl: string) => {
     dispatch({ type: 'SET_COMPOSED_IMAGE', payload: dataUrl })
   }, [])
@@ -117,7 +127,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider
-      value={{ state, addPhoto, setPhotos, toggleSelect, setFrameStyle, setComposedImage, setShareId, reset }}
+      value={{ state, addPhoto, setPhotos, toggleSelect, setFrameStyle, setBgColor, setComposedImage, setShareId, reset }}
     >
       {children}
     </AppContext.Provider>
