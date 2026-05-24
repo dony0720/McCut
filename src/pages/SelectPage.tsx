@@ -5,7 +5,7 @@ const REQUIRED = 4;
 
 export default function SelectPage() {
   const navigate = useNavigate();
-  const { state, toggleSelect, clearSelection } = useApp();
+  const { state, toggleSelect, clearSelection, resetPhotos } = useApp();
   const { capturedPhotos, selectedIndices } = state;
 
   const total = capturedPhotos.length;
@@ -14,11 +14,11 @@ export default function SelectPage() {
 
   return (
     <div className="min-h-screen bg-cream-50 flex flex-col items-center">
-      <div className="w-full max-w-sm md:max-w-lg flex flex-col min-h-screen">
+      <div className="w-full max-w-sm md:max-w-3xl flex flex-col min-h-screen">
         {/* ── 헤더 ── */}
         <div className="flex items-center gap-3 px-4 md:px-6 pt-5 md:pt-7 pb-3 shrink-0">
           <button
-            onClick={() => navigate("/camera")}
+            onClick={() => { resetPhotos(); navigate("/camera"); }}
             className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-ink/5 flex items-center justify-center transition-all active:scale-90 hover:bg-ink/10 shrink-0"
             aria-label="뒤로가기"
           >
@@ -133,7 +133,7 @@ export default function SelectPage() {
           </button>
 
           <button
-            onClick={() => navigate("/frame")}
+            onClick={() => navigate("/result")}
             disabled={!canProceed}
             className={[
               "flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full",

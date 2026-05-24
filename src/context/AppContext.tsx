@@ -27,6 +27,7 @@ type Action =
   | { type: 'SET_PHOTOS'; payload: string[] }
   | { type: 'TOGGLE_SELECT'; payload: number }
   | { type: 'CLEAR_SELECTION' }
+  | { type: 'RESET_PHOTOS' }
   | { type: 'SET_FRAME_STYLE'; payload: FrameStyle }
   | { type: 'SET_BG_ID'; payload: BgId }
   | { type: 'SET_COMPOSED_IMAGE'; payload: string }
@@ -47,20 +48,23 @@ function reducer(state: AppState, action: Action): AppState {
       const idx = action.payload
       const already = state.selectedIndices.includes(idx)
       if (already) {
-        return { ...state, selectedIndices: state.selectedIndices.filter((i) => i !== idx) }
+        return { ...state, selectedIndices: state.selectedIndices.filter((i) => i !== idx), composedImage: null }
       }
       if (state.selectedIndices.length >= 4) return state
-      return { ...state, selectedIndices: [...state.selectedIndices, idx] }
+      return { ...state, selectedIndices: [...state.selectedIndices, idx], composedImage: null }
     }
 
     case 'CLEAR_SELECTION':
-      return { ...state, selectedIndices: [] }
+      return { ...state, selectedIndices: [], composedImage: null }
+
+    case 'RESET_PHOTOS':
+      return { ...state, capturedPhotos: [], selectedIndices: [], composedImage: null }
 
     case 'SET_FRAME_STYLE':
-      return { ...state, frameStyle: action.payload }
+      return { ...state, frameStyle: action.payload, composedImage: null }
 
     case 'SET_BG_ID':
-      return { ...state, bgId: action.payload }
+      return { ...state, bgId: action.payload, composedImage: null }
 
     case 'SET_COMPOSED_IMAGE':
       return { ...state, composedImage: action.payload }
@@ -84,6 +88,7 @@ interface AppContextValue {
   setPhotos: (photos: string[]) => void
   toggleSelect: (index: number) => void
   clearSelection: () => void
+  resetPhotos: () => void
   setFrameStyle: (style: FrameStyle) => void
   setBgId: (id: BgId) => void
   setComposedImage: (dataUrl: string) => void
@@ -114,6 +119,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'CLEAR_SELECTION' })
   }, [])
 
+  const resetPhotos = useCallback(() => {
+    dispatch({ type: 'RESET_PHOTOS' })
+  }, [])
+
   const setFrameStyle = useCallback((style: FrameStyle) => {
     dispatch({ type: 'SET_FRAME_STYLE', payload: style })
   }, [])
@@ -136,7 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider
-      value={{ state, addPhoto, setPhotos, toggleSelect, clearSelection, setFrameStyle, setBgId, setComposedImage, setShareId, reset }}
+      value={{ state, addPhoto, setPhotos, toggleSelect, clearSelection, resetPhotos, setFrameStyle, setBgId, setComposedImage, setShareId, reset }}
     >
       {children}
     </AppContext.Provider>

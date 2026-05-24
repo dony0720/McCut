@@ -13,13 +13,21 @@ export default function CameraPage() {
   const webcamRef = useRef<Webcam>(null)
 
   const [facing, setFacing] = useState<'user' | 'environment'>('user')
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null)
+  const [isStreamReady, setIsStreamReady] = useState(false)
+  const [cameraError, setCameraError] = useState<'permission' | 'other' | null>(null)
   const [captureFlash, setCaptureFlash] = useState(false)
   const [viewfinderBlink, setViewfinderBlink] = useState(false)
   const [filledBars, setFilledBars] = useState<number[]>([])
 
+  const [autoActive, setAutoActiveState] = useState(false)
   const autoActiveRef = useRef(false)
   const shotCountRef = useRef(state.capturedPhotos.length)
+
+  // state와 ref를 항상 동기화 — ref는 콜백 stale closure 방지용
+  const setAutoActive = useCallback((val: boolean) => {
+    autoActiveRef.current = val
+    setAutoActiveState(val)
+  }, [])
   shotCountRef.current = state.capturedPhotos.length
 
   const shotCount = state.capturedPhotos.length
@@ -33,8 +41,29 @@ export default function CameraPage() {
     prevShotCount.current = shotCount
   }, [shotCount])
 
-  const handleUserMedia = useCallback(() => setHasPermission(true), [])
-  const handleUserMediaError = useCallback(() => setHasPermission(false), [])
+  const handleUserMedia = useCallback(() => {
+    setIsStreamReady(true)
+    setCameraError(null)
+  }, [])
+
+  const handleUserMediaError = useCallback((err: string | DOMException) => {
+    const name = typeof err === 'string' ? err : err.name
+
+    if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+      // 실제 권한 거부 — 브라우저 설정에서만 복구 가능
+      setCameraError('permission')
+    } else if (name === 'OverconstrainedError' || name === 'ConstraintNotSatisfiedError') {
+      // facingMode 제약 실패 → 이미 'user'면 소프트 오류로 전환, 아니면 폴백
+      if (facing !== 'user') {
+        setFacing('user')
+      } else {
+        setCameraError('other')
+      }
+    } else {
+      // NotFoundError(장치 없음), NotReadableError(장치 사용 중), 기타 일시적 오류
+      setCameraError('other')
+    }
+  }, [facing])
 
   const triggerCaptureEffect = useCallback(() => {
     setCaptureFlash(true)
@@ -53,7 +82,7 @@ export default function CameraPage() {
     const nextCount = shotCountRef.current + 1
 
     if (nextCount >= TOTAL_SHOTS) {
-      autoActiveRef.current = false
+      setAutoActive(false)
       setTimeout(() => navigate('/select'), 400)
       return
     }
@@ -63,7 +92,7 @@ export default function CameraPage() {
         if (autoActiveRef.current) startCountdown()
       }, 300)
     }
-  }, [addPhoto, navigate, triggerCaptureEffect])
+  }, [addPhoto, navigate, triggerCaptureEffect, setAutoActive])
 
   const { capture, flashVisible } = useShutter({
     webcamRef,
@@ -83,30 +112,30 @@ export default function CameraPage() {
   }, [flashVisible, triggerCaptureEffect])
 
   function handleShutter() {
-    if (shotCount >= TOTAL_SHOTS || hasPermission === false) return
+    if (shotCount >= TOTAL_SHOTS || !isStreamReady || cameraError === 'permission') return
 
-    if (autoActiveRef.current || isRunning) {
-      autoActiveRef.current = false
+    if (autoActive || isRunning) {
+      setAutoActive(false)
       cancelCountdown()
     } else {
-      autoActiveRef.current = true
+      setAutoActive(true)
       startCountdown()
     }
   }
 
   void capture
 
-  const isActive = autoActiveRef.current || isRunning
-  const isDisabled = shotCount >= TOTAL_SHOTS || hasPermission === false
+  const isActive = autoActive || isRunning
+  const isDisabled = shotCount >= TOTAL_SHOTS || !isStreamReady || cameraError === 'permission'
 
   return (
     <div className="min-h-screen bg-[#1c1814] flex flex-col items-center">
-      <div className="w-full max-w-sm md:max-w-lg flex flex-col min-h-screen">
+      <div className="w-full max-w-sm md:max-w-3xl flex flex-col min-h-screen">
 
         {/* ── 헤더 ── */}
         <div className="flex items-center justify-between px-4 md:px-6 pt-5 md:pt-7 pb-4 shrink-0">
           <button
-            onClick={() => { autoActiveRef.current = false; cancelCountdown(); navigate('/') }}
+            onClick={() => { setAutoActive(false); cancelCountdown(); navigate('/') }}
             className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 flex items-center justify-center transition-all active:scale-90 hover:bg-white/20"
             aria-label="뒤로가기"
           >
@@ -117,7 +146,7 @@ export default function CameraPage() {
 
           {/* 카메라 전환 */}
           <button
-            onClick={() => { autoActiveRef.current = false; cancelCountdown(); setFacing(f => f === 'user' ? 'environment' : 'user') }}
+            onClick={() => { setAutoActive(false); cancelCountdown(); setIsStreamReady(false); setFacing(f => f === 'user' ? 'environment' : 'user') }}
             className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 flex items-center justify-center transition-all active:scale-90 hover:bg-white/20"
             aria-label="카메라 전환"
           >
@@ -189,7 +218,8 @@ export default function CameraPage() {
             <div className="absolute bottom-3 right-3 w-6 h-6 md:w-7 md:h-7 border-b-[2.5px] border-r-[2.5px] border-white/60 rounded-br-md z-10" />
 
             {/* 카메라 스트림 */}
-            {hasPermission === false ? (
+            {cameraError === 'permission' ? (
+              /* 실제 권한 거부 — 브라우저 설정에서만 복구 가능 */
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-8 text-center">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="opacity-40">
                   <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -199,17 +229,36 @@ export default function CameraPage() {
                 <p className="text-white/40 text-xs md:text-sm">브라우저 설정에서 카메라를 허용해주세요</p>
               </div>
             ) : (
-              <Webcam
-                ref={webcamRef}
-                audio={false}
-                screenshotFormat="image/jpeg"
-                screenshotQuality={0.92}
-                mirrored={facing === 'user'}
-                videoConstraints={{ facingMode: facing, aspectRatio: 3 / 4 }}
-                onUserMedia={handleUserMedia}
-                onUserMediaError={handleUserMediaError}
-                className="w-full h-full object-cover"
-              />
+              <>
+                <Webcam
+                  ref={webcamRef}
+                  audio={false}
+                  screenshotFormat="image/jpeg"
+                  screenshotQuality={0.92}
+                  mirrored={facing === 'user'}
+                  videoConstraints={{ facingMode: { ideal: facing } }}
+                  onUserMedia={handleUserMedia}
+                  onUserMediaError={handleUserMediaError}
+                  className="w-full h-full object-cover"
+                />
+                {/* 일시적 오류 — 소프트 오버레이 + 재시도 (Webcam 유지) */}
+                {cameraError === 'other' && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/60 z-10 p-8 text-center">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="opacity-50">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                      <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    <p className="text-white/80 text-sm md:text-base">카메라를 불러오지 못했습니다</p>
+                    <p className="text-white/40 text-xs md:text-sm">다른 앱에서 카메라를 사용 중이거나<br/>장치를 찾을 수 없습니다</p>
+                    <button
+                      onClick={() => { setCameraError(null); setIsStreamReady(false); }}
+                      className="px-5 py-2.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-sm font-semibold transition-all active:scale-95"
+                    >
+                      다시 시도
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
