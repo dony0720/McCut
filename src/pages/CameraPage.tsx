@@ -19,8 +19,15 @@ export default function CameraPage() {
   const [viewfinderBlink, setViewfinderBlink] = useState(false)
   const [filledBars, setFilledBars] = useState<number[]>([])
 
+  const [autoActive, setAutoActiveState] = useState(false)
   const autoActiveRef = useRef(false)
   const shotCountRef = useRef(state.capturedPhotos.length)
+
+  // state와 ref를 항상 동기화 — ref는 콜백 stale closure 방지용
+  const setAutoActive = useCallback((val: boolean) => {
+    autoActiveRef.current = val
+    setAutoActiveState(val)
+  }, [])
   shotCountRef.current = state.capturedPhotos.length
 
   const shotCount = state.capturedPhotos.length
@@ -71,7 +78,7 @@ export default function CameraPage() {
     const nextCount = shotCountRef.current + 1
 
     if (nextCount >= TOTAL_SHOTS) {
-      autoActiveRef.current = false
+      setAutoActive(false)
       setTimeout(() => navigate('/select'), 400)
       return
     }
@@ -81,7 +88,7 @@ export default function CameraPage() {
         if (autoActiveRef.current) startCountdown()
       }, 300)
     }
-  }, [addPhoto, navigate, triggerCaptureEffect])
+  }, [addPhoto, navigate, triggerCaptureEffect, setAutoActive])
 
   const { capture, flashVisible } = useShutter({
     webcamRef,
@@ -103,18 +110,18 @@ export default function CameraPage() {
   function handleShutter() {
     if (shotCount >= TOTAL_SHOTS || !isStreamReady || cameraError === 'permission') return
 
-    if (autoActiveRef.current || isRunning) {
-      autoActiveRef.current = false
+    if (autoActive || isRunning) {
+      setAutoActive(false)
       cancelCountdown()
     } else {
-      autoActiveRef.current = true
+      setAutoActive(true)
       startCountdown()
     }
   }
 
   void capture
 
-  const isActive = autoActiveRef.current || isRunning
+  const isActive = autoActive || isRunning
   const isDisabled = shotCount >= TOTAL_SHOTS || !isStreamReady || cameraError === 'permission'
 
   return (
@@ -124,7 +131,7 @@ export default function CameraPage() {
         {/* ── 헤더 ── */}
         <div className="flex items-center justify-between px-4 md:px-6 pt-5 md:pt-7 pb-4 shrink-0">
           <button
-            onClick={() => { autoActiveRef.current = false; cancelCountdown(); navigate('/') }}
+            onClick={() => { setAutoActive(false); cancelCountdown(); navigate('/') }}
             className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 flex items-center justify-center transition-all active:scale-90 hover:bg-white/20"
             aria-label="뒤로가기"
           >
@@ -135,7 +142,7 @@ export default function CameraPage() {
 
           {/* 카메라 전환 */}
           <button
-            onClick={() => { autoActiveRef.current = false; cancelCountdown(); setIsStreamReady(false); setFacing(f => f === 'user' ? 'environment' : 'user') }}
+            onClick={() => { setAutoActive(false); cancelCountdown(); setIsStreamReady(false); setFacing(f => f === 'user' ? 'environment' : 'user') }}
             className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 flex items-center justify-center transition-all active:scale-90 hover:bg-white/20"
             aria-label="카메라 전환"
           >
