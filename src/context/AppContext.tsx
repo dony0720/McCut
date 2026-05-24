@@ -5,23 +5,9 @@ import {
   useCallback,
   type ReactNode,
 } from 'react'
+import type { FrameStyle, AppState } from '@/types'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export type FrameStyle = 'classic' | 'pink' | 'dark' | 'mint'
-
-export interface AppState {
-  /** 촬영된 8장의 사진 (data URL) */
-  capturedPhotos: string[]
-  /** 선택된 4장의 사진 인덱스 (선택 순서 유지) */
-  selectedIndices: number[]
-  /** 선택된 프레임 스타일 */
-  frameStyle: FrameStyle
-  /** Canvas 합성 결과 이미지 (data URL) */
-  composedImage: string | null
-  /** 공유용 고유 ID */
-  shareId: string | null
-}
+export type { FrameStyle, AppState }
 
 // ─── Initial State ─────────────────────────────────────────────────────────────
 
@@ -49,32 +35,19 @@ type Action =
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'ADD_PHOTO':
-      return {
-        ...state,
-        capturedPhotos: [...state.capturedPhotos, action.payload],
-      }
+      return { ...state, capturedPhotos: [...state.capturedPhotos, action.payload] }
 
     case 'SET_PHOTOS':
-      return {
-        ...state,
-        capturedPhotos: action.payload,
-        selectedIndices: [],
-      }
+      return { ...state, capturedPhotos: action.payload, selectedIndices: [] }
 
     case 'TOGGLE_SELECT': {
       const idx = action.payload
       const already = state.selectedIndices.includes(idx)
       if (already) {
-        return {
-          ...state,
-          selectedIndices: state.selectedIndices.filter((i) => i !== idx),
-        }
+        return { ...state, selectedIndices: state.selectedIndices.filter((i) => i !== idx) }
       }
       if (state.selectedIndices.length >= 4) return state
-      return {
-        ...state,
-        selectedIndices: [...state.selectedIndices, idx],
-      }
+      return { ...state, selectedIndices: [...state.selectedIndices, idx] }
     }
 
     case 'SET_FRAME_STYLE':
@@ -144,16 +117,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider
-      value={{
-        state,
-        addPhoto,
-        setPhotos,
-        toggleSelect,
-        setFrameStyle,
-        setComposedImage,
-        setShareId,
-        reset,
-      }}
+      value={{ state, addPhoto, setPhotos, toggleSelect, setFrameStyle, setComposedImage, setShareId, reset }}
     >
       {children}
     </AppContext.Provider>
