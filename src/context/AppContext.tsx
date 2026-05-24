@@ -48,23 +48,23 @@ function reducer(state: AppState, action: Action): AppState {
       const idx = action.payload
       const already = state.selectedIndices.includes(idx)
       if (already) {
-        return { ...state, selectedIndices: state.selectedIndices.filter((i) => i !== idx) }
+        return { ...state, selectedIndices: state.selectedIndices.filter((i) => i !== idx), composedImage: null }
       }
       if (state.selectedIndices.length >= 4) return state
-      return { ...state, selectedIndices: [...state.selectedIndices, idx] }
+      return { ...state, selectedIndices: [...state.selectedIndices, idx], composedImage: null }
     }
 
     case 'CLEAR_SELECTION':
-      return { ...state, selectedIndices: [] }
+      return { ...state, selectedIndices: [], composedImage: null }
 
     case 'RESET_PHOTOS':
       return { ...state, capturedPhotos: [], selectedIndices: [], composedImage: null }
 
     case 'SET_FRAME_STYLE':
-      return { ...state, frameStyle: action.payload }
+      return { ...state, frameStyle: action.payload, composedImage: null }
 
     case 'SET_BG_ID':
-      return { ...state, bgId: action.payload }
+      return { ...state, bgId: action.payload, composedImage: null }
 
     case 'SET_COMPOSED_IMAGE':
       return { ...state, composedImage: action.payload }
