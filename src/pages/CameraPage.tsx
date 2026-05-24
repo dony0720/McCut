@@ -1,8 +1,9 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Webcam from 'react-webcam'
 import { useApp } from '@/context/AppContext'
 import { useShutter } from '@/hooks/useShutter'
+import { useCountdown } from '@/hooks/useCountdown'
 
 const TOTAL_SHOTS = 8
 
@@ -13,14 +14,48 @@ export default function CameraPage() {
 
   const [facing, setFacing] = useState<'user' | 'environment'>('user')
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
-  const [isFlashOn, setIsFlashOn] = useState(false)
+  const [captureFlash, setCaptureFlash] = useState(false)
+  const [viewfinderBlink, setViewfinderBlink] = useState(false)
+
+  const autoActiveRef = useRef(false)
+  const shotCountRef = useRef(state.capturedPhotos.length)
+  shotCountRef.current = state.capturedPhotos.length
 
   const shotCount = state.capturedPhotos.length
 
   const handleUserMedia = useCallback(() => setHasPermission(true), [])
   const handleUserMediaError = useCallback(() => setHasPermission(false), [])
 
-  const { capture, isCapturing, flashVisible } = useShutter({
+  const triggerCaptureEffect = useCallback(() => {
+    setCaptureFlash(true)
+    setViewfinderBlink(true)
+    setTimeout(() => setCaptureFlash(false), 120)
+    setTimeout(() => setViewfinderBlink(false), 250)
+  }, [])
+
+  const handleCountdownComplete = useCallback(() => {
+    if (!webcamRef.current) return
+    const dataUrl = webcamRef.current.getScreenshot()
+    if (!dataUrl) return
+
+    triggerCaptureEffect()
+    addPhoto(dataUrl)
+    const nextCount = shotCountRef.current + 1
+
+    if (nextCount >= TOTAL_SHOTS) {
+      autoActiveRef.current = false
+      setTimeout(() => navigate('/select'), 400)
+      return
+    }
+
+    if (autoActiveRef.current) {
+      setTimeout(() => {
+        if (autoActiveRef.current) startCountdown()
+      }, 300)
+    }
+  }, [addPhoto, navigate, triggerCaptureEffect])
+
+  const { capture, flashVisible } = useShutter({
     webcamRef,
     onCapture: addPhoto,
     onComplete: () => navigate('/select'),
@@ -28,9 +63,32 @@ export default function CameraPage() {
     currentCount: shotCount,
   })
 
-  function toggleFacing() {
-    setFacing((prev) => (prev === 'user' ? 'environment' : 'user'))
+  const { count, start: startCountdown, cancel: cancelCountdown, isRunning } = useCountdown({
+    from: 3,
+    onComplete: handleCountdownComplete,
+  })
+
+  useEffect(() => {
+    if (flashVisible) triggerCaptureEffect()
+  }, [flashVisible, triggerCaptureEffect])
+
+  function handleShutter() {
+    if (shotCount >= TOTAL_SHOTS || hasPermission === false) return
+
+    if (autoActiveRef.current || isRunning) {
+      autoActiveRef.current = false
+      cancelCountdown()
+    } else {
+      autoActiveRef.current = true
+      startCountdown()
+    }
   }
+
+  // capture는 더 이상 수동 촬영에 사용하지 않으므로 lint 방지
+  void capture
+
+  const isActive = autoActiveRef.current || isRunning
+  const isDisabled = shotCount >= TOTAL_SHOTS || hasPermission === false
 
   return (
     <div className="min-h-screen bg-[#1c1814] flex flex-col items-center">
@@ -39,7 +97,7 @@ export default function CameraPage() {
         {/* ── 헤더 ── */}
         <div className="flex items-center justify-between px-4 md:px-6 pt-5 md:pt-7 pb-3 shrink-0">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => { autoActiveRef.current = false; cancelCountdown(); navigate('/') }}
             className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 flex items-center justify-center transition-all active:scale-90 hover:bg-white/20"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -51,26 +109,40 @@ export default function CameraPage() {
             {shotCount} / {TOTAL_SHOTS} 컷
           </span>
 
+          {/* 카메라 전환 */}
           <button
-            onClick={() => setIsFlashOn((v) => !v)}
-            className={[
-              'w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all active:scale-90',
-              isFlashOn ? 'bg-coral' : 'bg-white/10 hover:bg-white/20',
-            ].join(' ')}
+            onClick={() => { autoActiveRef.current = false; cancelCountdown(); setFacing(f => f === 'user' ? 'environment' : 'user') }}
+            className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 flex items-center justify-center transition-all active:scale-90 hover:bg-white/20"
           >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M10 2L4 10h6l-2 6 8-9h-6l2-7z" fill={isFlashOn ? 'white' : '#ffffff99'} />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <polyline points="15 13 18 10 21 13"/>
+              <polyline points="9 13 6 10 3 13"/>
             </svg>
           </button>
         </div>
 
         {/* ── 뷰파인더 ── */}
         <div className="flex-1 flex flex-col px-4 md:px-6 min-h-0">
-          <div className="relative rounded-3xl overflow-hidden bg-[#2a2420] flex-1">
+          <div className={[
+            'relative rounded-3xl overflow-hidden bg-[#2a2420] flex-1 transition-all duration-150',
+            viewfinderBlink ? 'ring-4 ring-white/80' : '',
+          ].join(' ')}>
 
-            {/* 촬영 플래시 오버레이 */}
-            {flashVisible && (
-              <div className="absolute inset-0 bg-white z-20 pointer-events-none" />
+            {/* 화이트 플래시 오버레이 */}
+            {captureFlash && (
+              <div className="absolute inset-0 bg-white z-20 pointer-events-none rounded-3xl" />
+            )}
+
+            {/* 카운트다운 오버레이 */}
+            {isRunning && count !== null && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-black/50 border-[3px] border-white flex items-center justify-center">
+                  <span key={count} className="anim-count-pop font-gaegu font-bold text-white text-7xl md:text-8xl">
+                    {count}
+                  </span>
+                </div>
+              </div>
             )}
 
             {/* 진행 바 */}
@@ -118,53 +190,24 @@ export default function CameraPage() {
           </div>
         </div>
 
-        {/* ── 하단 컨트롤 ── */}
-        <div className="shrink-0 px-4 md:px-6 pt-5 pb-8 md:pb-10 flex flex-col items-center gap-5">
-
-          {/* 컨트롤 아이콘 3개 */}
-          <div className="flex items-center justify-center gap-10 md:gap-14">
-            <button className="flex flex-col items-center gap-1 opacity-70 hover:opacity-100 transition-opacity">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="13" r="8"/>
-                <path d="M12 9v4l3 3"/>
-                <path d="M9 3h6M12 3v2"/>
-              </svg>
-              <span className="text-white text-[0.65rem] md:text-xs font-semibold tracking-widest">3s</span>
-            </button>
-
-            <button
-              onClick={toggleFacing}
-              className="flex flex-col items-center gap-1 opacity-70 hover:opacity-100 transition-opacity active:scale-90"
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                <polyline points="15 13 18 10 21 13"/>
-                <polyline points="9 13 6 10 3 13"/>
-              </svg>
-              <span className="text-white text-[0.65rem] md:text-xs font-semibold tracking-widest">FLIP</span>
-            </button>
-
-            <button className="flex flex-col items-center gap-1 opacity-70 hover:opacity-100 transition-opacity">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-              </svg>
-              <span className="text-white text-[0.65rem] md:text-xs font-semibold tracking-widest">AUTO</span>
-            </button>
-          </div>
-
-          {/* 셔터 버튼 */}
+        {/* ── 셔터 버튼 ── */}
+        <div className="shrink-0 px-4 md:px-6 pt-5 pb-10 md:pb-14 flex flex-col items-center">
           <button
-            onClick={capture}
-            disabled={isCapturing || shotCount >= TOTAL_SHOTS || hasPermission === false}
+            onClick={handleShutter}
+            disabled={isDisabled}
             className={[
               'w-20 h-20 md:w-24 md:h-24 rounded-full border-[4px] border-white/30 flex items-center justify-center',
               'transition-all shadow-lg',
-              isCapturing || shotCount >= TOTAL_SHOTS
+              isDisabled
                 ? 'bg-coral/50 cursor-not-allowed'
-                : 'bg-coral hover:brightness-110 active:scale-90',
+                : isActive
+                  ? 'bg-white/20 hover:bg-white/30 active:scale-90'
+                  : 'bg-coral hover:brightness-110 active:scale-90',
             ].join(' ')}
           >
-            <span className="font-gaegu font-bold text-white text-lg md:text-xl">찰칵</span>
+            <span className="font-gaegu font-bold text-white text-lg md:text-xl">
+              {isActive ? '정지' : '찰칵'}
+            </span>
           </button>
         </div>
       </div>
