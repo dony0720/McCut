@@ -1,0 +1,169 @@
+import {
+  createContext,
+  useContext,
+  useReducer,
+  useCallback,
+  type ReactNode,
+} from 'react'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export type FrameStyle = 'classic' | 'pink' | 'dark' | 'mint'
+
+export interface AppState {
+  /** 촬영된 8장의 사진 (data URL) */
+  capturedPhotos: string[]
+  /** 선택된 4장의 사진 인덱스 (선택 순서 유지) */
+  selectedIndices: number[]
+  /** 선택된 프레임 스타일 */
+  frameStyle: FrameStyle
+  /** Canvas 합성 결과 이미지 (data URL) */
+  composedImage: string | null
+  /** 공유용 고유 ID */
+  shareId: string | null
+}
+
+// ─── Initial State ─────────────────────────────────────────────────────────────
+
+const initialState: AppState = {
+  capturedPhotos: [],
+  selectedIndices: [],
+  frameStyle: 'classic',
+  composedImage: null,
+  shareId: null,
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+
+type Action =
+  | { type: 'ADD_PHOTO'; payload: string }
+  | { type: 'SET_PHOTOS'; payload: string[] }
+  | { type: 'TOGGLE_SELECT'; payload: number }
+  | { type: 'SET_FRAME_STYLE'; payload: FrameStyle }
+  | { type: 'SET_COMPOSED_IMAGE'; payload: string }
+  | { type: 'SET_SHARE_ID'; payload: string }
+  | { type: 'RESET' }
+
+// ─── Reducer ──────────────────────────────────────────────────────────────────
+
+function reducer(state: AppState, action: Action): AppState {
+  switch (action.type) {
+    case 'ADD_PHOTO':
+      return {
+        ...state,
+        capturedPhotos: [...state.capturedPhotos, action.payload],
+      }
+
+    case 'SET_PHOTOS':
+      return {
+        ...state,
+        capturedPhotos: action.payload,
+        selectedIndices: [],
+      }
+
+    case 'TOGGLE_SELECT': {
+      const idx = action.payload
+      const already = state.selectedIndices.includes(idx)
+      if (already) {
+        return {
+          ...state,
+          selectedIndices: state.selectedIndices.filter((i) => i !== idx),
+        }
+      }
+      if (state.selectedIndices.length >= 4) return state
+      return {
+        ...state,
+        selectedIndices: [...state.selectedIndices, idx],
+      }
+    }
+
+    case 'SET_FRAME_STYLE':
+      return { ...state, frameStyle: action.payload }
+
+    case 'SET_COMPOSED_IMAGE':
+      return { ...state, composedImage: action.payload }
+
+    case 'SET_SHARE_ID':
+      return { ...state, shareId: action.payload }
+
+    case 'RESET':
+      return initialState
+
+    default:
+      return state
+  }
+}
+
+// ─── Context ──────────────────────────────────────────────────────────────────
+
+interface AppContextValue {
+  state: AppState
+  addPhoto: (dataUrl: string) => void
+  setPhotos: (photos: string[]) => void
+  toggleSelect: (index: number) => void
+  setFrameStyle: (style: FrameStyle) => void
+  setComposedImage: (dataUrl: string) => void
+  setShareId: (id: string) => void
+  reset: () => void
+}
+
+const AppContext = createContext<AppContextValue | null>(null)
+
+// ─── Provider ─────────────────────────────────────────────────────────────────
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(reducer, initialState)
+
+  const addPhoto = useCallback((dataUrl: string) => {
+    dispatch({ type: 'ADD_PHOTO', payload: dataUrl })
+  }, [])
+
+  const setPhotos = useCallback((photos: string[]) => {
+    dispatch({ type: 'SET_PHOTOS', payload: photos })
+  }, [])
+
+  const toggleSelect = useCallback((index: number) => {
+    dispatch({ type: 'TOGGLE_SELECT', payload: index })
+  }, [])
+
+  const setFrameStyle = useCallback((style: FrameStyle) => {
+    dispatch({ type: 'SET_FRAME_STYLE', payload: style })
+  }, [])
+
+  const setComposedImage = useCallback((dataUrl: string) => {
+    dispatch({ type: 'SET_COMPOSED_IMAGE', payload: dataUrl })
+  }, [])
+
+  const setShareId = useCallback((id: string) => {
+    dispatch({ type: 'SET_SHARE_ID', payload: id })
+  }, [])
+
+  const reset = useCallback(() => {
+    dispatch({ type: 'RESET' })
+  }, [])
+
+  return (
+    <AppContext.Provider
+      value={{
+        state,
+        addPhoto,
+        setPhotos,
+        toggleSelect,
+        setFrameStyle,
+        setComposedImage,
+        setShareId,
+        reset,
+      }}
+    >
+      {children}
+    </AppContext.Provider>
+  )
+}
+
+// ─── Hook ──────────────────────────────────────────────────────────────────────
+
+export function useApp() {
+  const ctx = useContext(AppContext)
+  if (!ctx) throw new Error('useApp must be used within AppProvider')
+  return ctx
+}
