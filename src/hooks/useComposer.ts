@@ -277,7 +277,28 @@ export function useComposer({
       if (abortedRef.current) return;
       drawCover(ctx, bgImg, 0, 0, layout.canvasW, layout.canvasH);
 
-      // 2. 사진 4장
+      // 2. 로고 (우상단)
+      try {
+        const logoImg = await loadImage("/logo.png");
+        if (!abortedRef.current) {
+          const logoH = 100;
+          const logoW = Math.round(
+            logoImg.naturalWidth * (logoH / logoImg.naturalHeight),
+          );
+          const logoPad = 20;
+          ctx.drawImage(
+            logoImg,
+            layout.canvasW - logoW - logoPad,
+            logoPad,
+            logoW,
+            logoH,
+          );
+        }
+      } catch {
+        // 로고 로드 실패 시 건너뜀
+      }
+
+      // 3. 사진 4장
       for (let i = 0; i < 4; i++) {
         if (abortedRef.current) return;
 
@@ -299,6 +320,29 @@ export function useComposer({
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(`0${i + 1}`, lx + lW / 2, ly + lH / 2);
+      }
+
+      // 4. 브랜드 텍스트 (사진 그리드 아래, 상해찬미 폰트)
+      if (!abortedRef.current) {
+        const fontFamily = 'SanghaiChanmi'
+        try {
+          const customFont = new FontFace(
+            fontFamily,
+            "url('https://cdn.jsdelivr.net/gh/projectnoonnu/naverfont_09@1.0/Sanghea_chanmi.woff') format('woff')",
+          )
+          await customFont.load()
+          document.fonts.add(customFont)
+          await document.fonts.ready
+        } catch {
+          // 폰트 로드 실패 시 기본 폰트로 폴백
+        }
+        const panel = layout.panel;
+        const textY = panel.y + panel.h + 100;
+        ctx.font = `40px ${fontFamily}, sans-serif`;
+        ctx.fillStyle = "rgba(255,255,255,0.90)";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("2026 목천청년교회 달란트마켓", layout.canvasW / 2, textY);
       }
 
       if (!abortedRef.current) {
