@@ -1,5 +1,6 @@
 import { useApp } from '@/context/AppContext'
 import type { FrameOption } from '@/types'
+import { useModalClose } from '@/hooks/useModalClose'
 import FramePreview from '@/components/FramePreview'
 
 interface Props {
@@ -17,16 +18,30 @@ const FRAME_OPTIONS: FrameOption[] = [
 export default function FrameSelectModal({ onClose, onConfirm }: Props) {
   const { state, setFrameStyle } = useApp()
   const selected = state.frameStyle
+  const { isClosing, handleClose } = useModalClose(onClose)
 
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
       {/* 백드롭 */}
-      <div className="absolute inset-0 bg-ink/40" onClick={onClose} />
+      <div
+        className={[
+          'absolute inset-0 bg-ink/40',
+          isClosing ? 'modal-backdrop-out' : 'modal-backdrop-in',
+        ].join(' ')}
+        onClick={handleClose}
+      />
 
       {/* 모달 시트 */}
-      <div className="relative w-full max-w-sm md:max-w-lg bg-cream-100 rounded-t-3xl md:rounded-3xl border-t-[3px] md:border-[3px] border-x-[3px] border-ink px-6 md:px-10 pt-6 pb-8 md:pb-10">
-
-        {/* 핸들 바 */}
+      <div
+        className={[
+          'relative w-full max-w-sm md:max-w-lg bg-cream-100',
+          'rounded-t-3xl md:rounded-3xl',
+          'border-t-[3px] md:border-[3px] border-x-[3px] border-ink',
+          'px-6 md:px-10 pt-6 pb-8 md:pb-10',
+          isClosing ? 'modal-sheet-out' : 'modal-sheet-in',
+        ].join(' ')}
+      >
+        {/* 핸들 바 (모바일 only) */}
         <div className="w-10 h-1 bg-ink/20 rounded-full mx-auto mb-5 md:hidden" />
 
         {/* 헤더 */}
@@ -40,8 +55,8 @@ export default function FrameSelectModal({ onClose, onConfirm }: Props) {
             </p>
           </div>
           <button
-            onClick={onClose}
-            className="w-9 h-9 md:w-11 md:h-11 rounded-full border-[2.5px] border-ink flex items-center justify-center transition-all active:scale-90 hover:bg-ink/5 mt-1"
+            onClick={handleClose}
+            className="w-9 h-9 md:w-11 md:h-11 rounded-full border-[2.5px] border-ink flex items-center justify-center transition-all active:scale-90 hover:bg-ink/5 mt-1 shrink-0"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <line x1="1" y1="1" x2="13" y2="13" stroke="#1a1614" strokeWidth="2.2" strokeLinecap="round"/>
@@ -59,7 +74,8 @@ export default function FrameSelectModal({ onClose, onConfirm }: Props) {
                 key={opt.id}
                 onClick={() => setFrameStyle(opt.id)}
                 className={[
-                  'relative rounded-2xl border-[3px] overflow-hidden transition-all duration-150 active:scale-95 bg-cream-50',
+                  'relative rounded-2xl border-[3px] overflow-hidden bg-cream-50',
+                  'transition-all duration-150 active:scale-95',
                   isSelected
                     ? 'border-coral shadow-[0_0_0_2px_#e8573a20]'
                     : 'border-ink/20 hover:border-ink/40',
@@ -80,7 +96,7 @@ export default function FrameSelectModal({ onClose, onConfirm }: Props) {
 
                 {/* 선택 체크마크 */}
                 {isSelected && (
-                  <div className="absolute top-2 left-2 w-6 h-6 md:w-7 md:h-7 rounded-full bg-coral border-[2px] border-white flex items-center justify-center shadow-sm">
+                  <div className="anim-check-bounce absolute top-2 left-2 w-6 h-6 md:w-7 md:h-7 rounded-full bg-coral border-[2px] border-white flex items-center justify-center shadow-sm">
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                       <polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
