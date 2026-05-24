@@ -24,7 +24,7 @@ export default function WelcomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream-100 flex flex-col items-center">
+    <div className="h-[100dvh] bg-cream-100 flex flex-col items-center overflow-hidden">
 
       {/* 메인 콘텐츠 — 화면 전체를 3개 영역으로 균등 분배 */}
       <div className="w-full max-w-sm md:max-w-3xl flex flex-col flex-1 px-6 md:px-12">

@@ -21,8 +21,6 @@ interface Layout {
 //  배경 이미지 자체에 하단 텍스트/로고가 포함되어 있는 경우를 고려해
 //  패널은 캔버스 상단 60~65% 영역에 배치합니다.
 
-const GAP = 8
-
 function getLayout(style: FrameStyle): Layout {
   const cw = 640
 
@@ -30,42 +28,44 @@ function getLayout(style: FrameStyle): Layout {
 
     // ── classic: 다크 패널 + 2×2 그리드 ─────────────────────────────────────
     case 'classic': {
-      const pad      = 10
-      const photoW   = Math.floor((cw * 0.92 - pad * 2 - GAP) / 2)
-      const photoH   = Math.round(photoW * (4 / 3))
-      const panelW   = photoW * 2 + GAP + pad * 2
-      const panelH   = photoH * 2 + GAP + pad * 2
-      const panelX   = Math.round((cw - panelW) / 2)
-      const panelY   = 40
-      const ch       = panelY + panelH + 50          // 패널 크기에 맞춰 동적 계산
+      const gap    = 16
+      const pad    = 16
+      const photoW = Math.floor((cw * 0.82 - pad * 2 - gap) / 2)
+      const photoH = Math.round(photoW * (4 / 3))
+      const panelW = photoW * 2 + gap + pad * 2
+      const panelH = photoH * 2 + gap + pad * 2
+      const panelX = Math.round((cw - panelW) / 2)
+      const panelY = 40
+      const ch     = panelY + panelH + 50
       return {
         canvasW: cw, canvasH: ch,
         panel: { x: panelX, y: panelY, w: panelW, h: panelH, radius: 20, color: 'rgba(28,16,8,0.72)' },
         cells: [
-          { x: panelX + pad,            y: panelY + pad,            w: photoW, h: photoH },
-          { x: panelX + pad + photoW + GAP, y: panelY + pad,        w: photoW, h: photoH },
-          { x: panelX + pad,            y: panelY + pad + photoH + GAP, w: photoW, h: photoH },
-          { x: panelX + pad + photoW + GAP, y: panelY + pad + photoH + GAP, w: photoW, h: photoH },
+          { x: panelX + pad,                y: panelY + pad,                w: photoW, h: photoH },
+          { x: panelX + pad + photoW + gap,  y: panelY + pad,                w: photoW, h: photoH },
+          { x: panelX + pad,                y: panelY + pad + photoH + gap,  w: photoW, h: photoH },
+          { x: panelX + pad + photoW + gap,  y: panelY + pad + photoH + gap, w: photoW, h: photoH },
         ],
       }
     }
 
     // ── strip: 세로 스트립 패널 ───────────────────────────────────────────────
     case 'strip': {
-      const pad    = 8
-      const photoW = Math.round(cw * 0.84)
+      const gap    = 12
+      const pad    = 12
+      const photoW = Math.round(cw * 0.78)
       const photoH = Math.round(photoW * (9 / 16))
       const panelW = photoW + pad * 2
-      const panelH = photoH * 4 + GAP * 3 + pad * 2
+      const panelH = photoH * 4 + gap * 3 + pad * 2
       const panelX = Math.round((cw - panelW) / 2)
       const panelY = 48
-      const ch     = panelY + panelH + Math.round(panelH * 0.25)
+      const ch     = panelY + panelH + Math.round(panelH * 0.20)
       return {
         canvasW: cw, canvasH: ch,
         panel: { x: panelX, y: panelY, w: panelW, h: panelH, radius: 16, color: 'rgba(20,12,6,0.70)' },
         cells: [0, 1, 2, 3].map(i => ({
           x: panelX + pad,
-          y: panelY + pad + i * (photoH + GAP),
+          y: panelY + pad + i * (photoH + gap),
           w: photoW,
           h: photoH,
         })),
@@ -74,11 +74,12 @@ function getLayout(style: FrameStyle): Layout {
 
     // ── dark: 2×2 정사각 크롭 + 더 진한 패널 ────────────────────────────────
     case 'dark': {
-      const pad    = 10
-      const photoW = Math.floor((cw * 0.92 - pad * 2 - GAP) / 2)
+      const gap    = 16
+      const pad    = 16
+      const photoW = Math.floor((cw * 0.82 - pad * 2 - gap) / 2)
       const photoH = photoW
-      const panelW = photoW * 2 + GAP + pad * 2
-      const panelH = photoH * 2 + GAP + pad * 2
+      const panelW = photoW * 2 + gap + pad * 2
+      const panelH = photoH * 2 + gap + pad * 2
       const panelX = Math.round((cw - panelW) / 2)
       const panelY = 40
       const ch     = panelY + panelH + 50
@@ -86,10 +87,10 @@ function getLayout(style: FrameStyle): Layout {
         canvasW: cw, canvasH: ch,
         panel: { x: panelX, y: panelY, w: panelW, h: panelH, radius: 16, color: 'rgba(0,0,0,0.80)' },
         cells: [
-          { x: panelX + pad,            y: panelY + pad,            w: photoW, h: photoH },
-          { x: panelX + pad + photoW + GAP, y: panelY + pad,        w: photoW, h: photoH },
-          { x: panelX + pad,            y: panelY + pad + photoH + GAP, w: photoW, h: photoH },
-          { x: panelX + pad + photoW + GAP, y: panelY + pad + photoH + GAP, w: photoW, h: photoH },
+          { x: panelX + pad,                y: panelY + pad,                w: photoW, h: photoH },
+          { x: panelX + pad + photoW + gap,  y: panelY + pad,                w: photoW, h: photoH },
+          { x: panelX + pad,                y: panelY + pad + photoH + gap,  w: photoW, h: photoH },
+          { x: panelX + pad + photoW + gap,  y: panelY + pad + photoH + gap, w: photoW, h: photoH },
         ],
       }
     }
@@ -97,12 +98,13 @@ function getLayout(style: FrameStyle): Layout {
     // ── mint: 좌 1장(크게) + 우 3장(스택) ────────────────────────────────────
     case 'mint':
     default: {
-      const pad    = 10
-      const areaW  = Math.round(cw * 0.90)
+      const gap    = 16
+      const pad    = 16
+      const areaW  = Math.round(cw * 0.82)
       const leftW  = Math.round(areaW * 0.54)
-      const rightW = areaW - leftW - GAP
-      const rCellH = rightW                        // 1:1 정사각형
-      const leftH  = rCellH * 3 + GAP * 2
+      const rightW = areaW - leftW - gap
+      const rCellH = rightW
+      const leftH  = rCellH * 3 + gap * 2
       const panelW = areaW + pad * 2
       const panelH = leftH + pad * 2
       const panelX = Math.round((cw - panelW) / 2)
@@ -112,10 +114,10 @@ function getLayout(style: FrameStyle): Layout {
         canvasW: cw, canvasH: ch,
         panel: { x: panelX, y: panelY, w: panelW, h: panelH, radius: 20, color: 'rgba(40,100,80,0.65)' },
         cells: [
-          { x: panelX + pad, y: panelY + pad, w: leftW, h: leftH },
-          { x: panelX + pad + leftW + GAP, y: panelY + pad,                         w: rightW, h: rCellH },
-          { x: panelX + pad + leftW + GAP, y: panelY + pad + rCellH + GAP,           w: rightW, h: rCellH },
-          { x: panelX + pad + leftW + GAP, y: panelY + pad + (rCellH + GAP) * 2,     w: rightW, h: rCellH },
+          { x: panelX + pad,               y: panelY + pad, w: leftW,  h: leftH  },
+          { x: panelX + pad + leftW + gap,  y: panelY + pad,                       w: rightW, h: rCellH },
+          { x: panelX + pad + leftW + gap,  y: panelY + pad + rCellH + gap,         w: rightW, h: rCellH },
+          { x: panelX + pad + leftW + gap,  y: panelY + pad + (rCellH + gap) * 2,   w: rightW, h: rCellH },
         ],
       }
     }
@@ -205,14 +207,7 @@ export function useComposer({ photos, bgId, frameStyle, onComplete }: UseCompose
       if (abortedRef.current) return
       drawCover(ctx, bgImg, 0, 0, layout.canvasW, layout.canvasH)
 
-      // 2. 사진 패널 (다크 컨테이너)
-      const { panel } = layout
-      ctx.fillStyle = panel.color
-      ctx.beginPath()
-      ctx.roundRect(panel.x, panel.y, panel.w, panel.h, panel.radius)
-      ctx.fill()
-
-      // 3. 사진 4장
+      // 2. 사진 4장
       for (let i = 0; i < 4; i++) {
         if (abortedRef.current) return
 

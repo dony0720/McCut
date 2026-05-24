@@ -153,8 +153,10 @@ export default function ResultPage() {
             {/* 카드 본체 — 이미지 크기에 맞춰 수축 */}
             <div
               className={[
-                "rounded-2xl overflow-hidden border-[2px] border-ink/10",
-                composedImage && !isComposing ? "bg-transparent" : "bg-white w-full",
+                "rounded-2xl overflow-hidden ",
+                composedImage && !isComposing
+                  ? "bg-transparent"
+                  : "bg-white w-full",
               ].join(" ")}
             >
               {isComposing && (
