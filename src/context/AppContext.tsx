@@ -26,6 +26,7 @@ type Action =
   | { type: 'ADD_PHOTO'; payload: string }
   | { type: 'SET_PHOTOS'; payload: string[] }
   | { type: 'TOGGLE_SELECT'; payload: number }
+  | { type: 'CLEAR_SELECTION' }
   | { type: 'SET_FRAME_STYLE'; payload: FrameStyle }
   | { type: 'SET_BG_ID'; payload: BgId }
   | { type: 'SET_COMPOSED_IMAGE'; payload: string }
@@ -51,6 +52,9 @@ function reducer(state: AppState, action: Action): AppState {
       if (state.selectedIndices.length >= 4) return state
       return { ...state, selectedIndices: [...state.selectedIndices, idx] }
     }
+
+    case 'CLEAR_SELECTION':
+      return { ...state, selectedIndices: [] }
 
     case 'SET_FRAME_STYLE':
       return { ...state, frameStyle: action.payload }
@@ -79,6 +83,7 @@ interface AppContextValue {
   addPhoto: (dataUrl: string) => void
   setPhotos: (photos: string[]) => void
   toggleSelect: (index: number) => void
+  clearSelection: () => void
   setFrameStyle: (style: FrameStyle) => void
   setBgId: (id: BgId) => void
   setComposedImage: (dataUrl: string) => void
@@ -105,6 +110,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'TOGGLE_SELECT', payload: index })
   }, [])
 
+  const clearSelection = useCallback(() => {
+    dispatch({ type: 'CLEAR_SELECTION' })
+  }, [])
+
   const setFrameStyle = useCallback((style: FrameStyle) => {
     dispatch({ type: 'SET_FRAME_STYLE', payload: style })
   }, [])
@@ -127,7 +136,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider
-      value={{ state, addPhoto, setPhotos, toggleSelect, setFrameStyle, setBgId, setComposedImage, setShareId, reset }}
+      value={{ state, addPhoto, setPhotos, toggleSelect, clearSelection, setFrameStyle, setBgId, setComposedImage, setShareId, reset }}
     >
       {children}
     </AppContext.Provider>
