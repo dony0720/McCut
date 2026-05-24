@@ -39,11 +39,11 @@ export default function App() {
             }
           />
 
-          {/* 결과 — 합성 이미지가 없으면 /frame 으로 */}
+          {/* 결과 — 4장 선택이 없으면 /select 로 (합성은 ResultPage 내부에서 수행) */}
           <Route
             path="/result"
             element={
-              <RouteGuard require="composed">
+              <RouteGuard require="selection">
                 <ResultPage />
               </RouteGuard>
             }
