@@ -27,7 +27,7 @@ export default function WelcomePage() {
     <div className="min-h-screen bg-cream-100 flex flex-col items-center">
 
       {/* 메인 콘텐츠 — 화면 전체를 3개 영역으로 균등 분배 */}
-      <div className="w-full max-w-sm md:max-w-lg flex flex-col flex-1 px-6 md:px-12">
+      <div className="w-full max-w-sm md:max-w-3xl flex flex-col flex-1 px-6 md:px-12">
 
         {/* ── 상단 영역: 아이콘 + 타이틀 ── */}
         <div className="flex flex-col items-center pt-10 md:pt-16">
@@ -97,7 +97,7 @@ export default function WelcomePage() {
       </div>
 
       {/* 하단 탭바 */}
-      <div className="anim-tabbar w-full max-w-sm md:max-w-lg border-t-[2px] border-ink/10 bg-cream-100">
+      <div className="anim-tabbar w-full max-w-sm md:max-w-3xl border-t-[2px] border-ink/10 bg-cream-100">
         <div className="flex items-center justify-around px-4 py-3 md:py-5">
 
           {/* store */}

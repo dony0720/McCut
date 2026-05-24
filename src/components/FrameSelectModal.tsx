@@ -46,7 +46,7 @@ export default function FrameSelectModal({ onClose, onConfirm }: Props) {
       {/* 모달 시트 */}
       <div
         className={[
-          'relative w-full max-w-sm md:max-w-lg bg-cream-100 overflow-hidden',
+          'relative w-full max-w-sm md:max-w-3xl bg-cream-100 overflow-hidden',
           'rounded-t-3xl md:rounded-3xl',
           'border-t-[3px] md:border-[3px] border-x-[3px] border-ink',
           isClosing ? 'modal-sheet-out' : 'modal-sheet-in',

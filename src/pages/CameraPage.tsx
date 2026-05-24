@@ -126,7 +126,7 @@ export default function CameraPage() {
 
   return (
     <div className="min-h-screen bg-[#1c1814] flex flex-col items-center">
-      <div className="w-full max-w-sm md:max-w-lg flex flex-col min-h-screen">
+      <div className="w-full max-w-sm md:max-w-3xl flex flex-col min-h-screen">
 
         {/* ── 헤더 ── */}
         <div className="flex items-center justify-between px-4 md:px-6 pt-5 md:pt-7 pb-4 shrink-0">
