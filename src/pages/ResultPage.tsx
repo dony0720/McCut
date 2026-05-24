@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
 import { useComposer } from "@/hooks/useComposer";
@@ -15,6 +15,14 @@ export default function ResultPage() {
     state;
 
   const displayId = useRef(makeDisplayId());
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function showToast(msg: string) {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(msg);
+    toastTimer.current = setTimeout(() => setToast(null), 3000);
+  }
 
   const selectedPhotos = selectedIndices.map((i) => capturedPhotos[i]);
 
@@ -40,8 +48,8 @@ export default function ResultPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── 저장하기 ──────────────────────────────────────────────────────────────
-  function handleSave() {
+  // ── 이미지 다운로드 헬퍼 ──────────────────────────────────────────────────
+  function downloadImage() {
     if (!composedImage) return;
     const a = document.createElement("a");
     a.href = composedImage;
@@ -49,10 +57,17 @@ export default function ResultPage() {
     a.click();
   }
 
+  // ── 저장하기 ──────────────────────────────────────────────────────────────
+  function handleSave() {
+    downloadImage();
+    showToast("이미지가 저장되었습니다 📷");
+  }
+
   // ── 공유 ──────────────────────────────────────────────────────────────────
   async function handleShare() {
     if (!composedImage) return;
 
+    // 1순위: Web Share API (iOS · Android 네이티브 공유 시트)
     if (navigator.share && navigator.canShare) {
       try {
         const blob = await (await fetch(composedImage)).blob();
@@ -63,18 +78,16 @@ export default function ResultPage() {
           await navigator.share({ files: [file], title: "McCut 사진" });
           return;
         }
-      } catch {
-        /* 공유 취소 또는 미지원 */
+      } catch (e) {
+        // 사용자가 공유 취소한 경우 AbortError — 아무것도 하지 않음
+        if (e instanceof DOMException && e.name === "AbortError") return;
       }
     }
 
-    // Web Share 미지원 → 클립보드 복사 fallback
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      alert("링크가 복사되었습니다!");
-    } catch {
-      alert("공유 기능을 지원하지 않는 환경입니다.");
-    }
+    // 2순위: 이미지 직접 다운로드 + 안내 토스트
+    // (URL 공유는 세션 상태에 의존하므로 의미 없음)
+    downloadImage();
+    showToast("이미지를 저장했습니다. 갤러리에서 공유해주세요 😊");
   }
 
   // ── 다시 찍기 ─────────────────────────────────────────────────────────────
@@ -84,7 +97,7 @@ export default function ResultPage() {
   }
 
   return (
-    <div className="h-screen bg-cream-50 flex flex-col items-center overflow-hidden">
+    <div className="h-screen bg-cream-50 flex flex-col items-center overflow-hidden relative">
       <div className="w-full max-w-sm md:max-w-3xl flex flex-col h-full">
         {/* ── 헤더 ── */}
         <div className="flex items-center justify-between px-4 md:px-6 pt-5 md:pt-7 pb-2 shrink-0">
@@ -176,6 +189,13 @@ export default function ResultPage() {
             </div>
           </div>
         </div>
+
+        {/* ── 토스트 ── */}
+        {toast && (
+          <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl bg-ink/90 text-white text-sm font-medium shadow-lg whitespace-nowrap animate-fade-in-up pointer-events-none">
+            {toast}
+          </div>
+        )}
 
         {/* ── 하단 버튼 ── */}
         <div className="shrink-0 px-4 md:px-6 pt-4 pb-10 md:pb-12 flex gap-3 bg-cream-50 border-t border-ink/10">
