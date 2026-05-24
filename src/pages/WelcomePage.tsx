@@ -1,47 +1,18 @@
-import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import IconBox from '@/components/IconBox'
 import { useApp } from '@/context/AppContext'
 
 export default function WelcomePage() {
   const navigate = useNavigate()
-  const { reset, setPhotos } = useApp()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { reset } = useApp()
 
   function handleCamera() {
     reset()
     navigate('/camera')
   }
 
-  function handleAlbumClick() {
-    fileInputRef.current?.click()
-  }
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? [])
-    if (files.length === 0) return
-
-    const readers = files.slice(0, 8).map(
-      (file) =>
-        new Promise<string>((resolve) => {
-          const reader = new FileReader()
-          reader.onload = () => resolve(reader.result as string)
-          reader.readAsDataURL(file)
-        }),
-    )
-
-    Promise.all(readers).then((dataUrls) => {
-      reset()
-      setPhotos(dataUrls)
-      navigate('/select')
-    })
-
-    e.target.value = ''
-  }
-
   return (
     <div className="min-h-screen bg-cream-100 flex flex-col items-center">
-      {/* 스크롤 가능한 메인 영역 */}
       <div className="w-full max-w-sm flex flex-col px-6 pt-10 pb-4 flex-1">
 
         {/* 아이콘 박스 4개 — stagger drop-in */}
@@ -77,15 +48,12 @@ export default function WelcomePage() {
           <span className="absolute left-1/2 -translate-x-1/2 bottom-0 text-ink text-lg select-none">✦</span>
         </div>
 
-        {/* 버튼 영역 — slide-up */}
+        {/* 버튼 영역 */}
         <div className="anim-buttons flex flex-col gap-3">
 
-          {/* 코랄 말풍선 버튼 */}
+          {/* 코랄 말풍선 버튼 — 텍스트 추후 변경 예정 */}
           <div className="relative pb-3">
-            <button
-              onClick={handleAlbumClick}
-              className="w-full py-4 bg-coral hover:brightness-95 text-white font-gaegu font-bold text-lg rounded-full border-[3px] border-ink transition-all duration-150 active:scale-95"
-            >
+            <button className="w-full py-4 bg-coral hover:brightness-95 text-white font-gaegu font-bold text-lg rounded-full border-[3px] border-ink transition-all duration-150 active:scale-95">
               NEW 앨범 이미지로 나만의 네컷 만들기!
             </button>
             <div className="absolute left-1/2 -translate-x-1/2 bottom-[2px] w-0 h-0 border-l-[8px] border-r-[8px] border-t-[11px] border-l-transparent border-r-transparent border-t-ink" />
@@ -127,7 +95,6 @@ export default function WelcomePage() {
               <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
             </svg>
             <span className="text-ink text-[0.6rem] font-bold tracking-widest">tabs.home</span>
-            {/* 활성 인디케이터 */}
             <div className="w-6 h-[3px] bg-ink rounded-full -mt-1" />
           </button>
 
@@ -142,16 +109,6 @@ export default function WelcomePage() {
           </button>
         </div>
       </div>
-
-      {/* 숨겨진 파일 입력 */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        multiple
-        className="hidden"
-        onChange={handleFileChange}
-      />
     </div>
   )
 }
