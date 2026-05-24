@@ -4,18 +4,14 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#fff0f6',
-          100: '#ffe0ee',
-          200: '#ffc2dd',
-          300: '#ff94c0',
-          400: '#ff5599',
-          500: '#ff6b9d',
-          600: '#e8527f',
-          700: '#c73963',
-          800: '#a52b4f',
-          900: '#872040',
+        cream: {
+          50: '#fdfaf5',
+          100: '#faf3e8',
+          200: '#f5e6d0',
+          300: '#edd4b0',
         },
+        ink: '#1a1614',
+        coral: '#e8573a',
       },
       fontFamily: {
         sans: [
@@ -26,16 +22,6 @@ export default {
           'sans-serif',
         ],
         gaegu: ['Gaegu', 'cursive'],
-      },
-      colors: {
-        cream: {
-          50: '#fdfaf5',
-          100: '#faf3e8',
-          200: '#f5e6d0',
-          300: '#edd4b0',
-        },
-        ink: '#1a1614',
-        coral: '#e8573a',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in-out',
