@@ -61,6 +61,60 @@
 .anim-counter { animation: fadeInOnly  0.6s ease-out both; animation-delay: 1350ms; }
 .anim-tabbar  { animation: slideUpFade 0.7s ease-out both; animation-delay: 1250ms; }
 
+/* ─── 모달 애니메이션 ─────────────────────────────────────────── */
+
+@keyframes backdropIn {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes backdropOut {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes sheetIn {
+  0%   { opacity: 0; transform: translateY(100%); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sheetOut {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(100%); }
+}
+
+/* 태블릿 중앙 다이얼로그 */
+@keyframes dialogIn {
+  0%   { opacity: 0; transform: scale(0.94); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes dialogOut {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.94); }
+}
+
+/* 체크마크 bounceIn */
+@keyframes checkBounce {
+  0%   { opacity: 0; transform: scale(0.3); }
+  60%  { opacity: 1; transform: scale(1.25); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.modal-backdrop-in  { animation: backdropIn  0.25s ease-out both; }
+.modal-backdrop-out { animation: backdropOut 0.2s ease-in  both; }
+
+.modal-sheet-in  { animation: sheetIn  0.35s cubic-bezier(0.32,0.72,0,1) both; }
+.modal-sheet-out { animation: sheetOut 0.25s cubic-bezier(0.32,0.72,0,1) both; }
+
+/* 태블릿(md 이상)에서 시트 대신 다이얼로그 애니메이션 */
+@media (min-width: 768px) {
+  .modal-sheet-in  { animation: dialogIn  0.25s ease-out both; }
+  .modal-sheet-out { animation: dialogOut 0.2s ease-in  both; }
+}
+
+.anim-check-bounce { animation: checkBounce 0.35s cubic-bezier(0.34,1.56,0.64,1) both; }
+
 @layer components {
   .btn-primary {
     @apply bg-pink-500 hover:bg-pink-600 active:bg-pink-700
