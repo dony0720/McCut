@@ -3,6 +3,7 @@ import { useApp } from '@/context/AppContext'
 import type { FrameOption } from '@/types'
 import { useModalClose } from '@/hooks/useModalClose'
 import FramePreview from '@/components/FramePreview'
+import BgSelectGrid from '@/components/BgSelectGrid'
 
 interface Props {
   onClose: () => void
@@ -19,7 +20,7 @@ const FRAME_OPTIONS: FrameOption[] = [
 type Step = 'frame' | 'bg'
 
 export default function FrameSelectModal({ onClose, onConfirm }: Props) {
-  const { state, setFrameStyle } = useApp()
+  const { state, setFrameStyle, setBgId } = useApp()
   const selected = state.frameStyle
   const { isClosing, handleClose } = useModalClose(onClose)
 
@@ -166,9 +167,12 @@ export default function FrameSelectModal({ onClose, onConfirm }: Props) {
                 </button>
               </div>
 
-              {/* 배경 UI — 5-2에서 구현 */}
-              <div className="min-h-[160px] md:min-h-[200px] flex items-center justify-center text-ink/30 text-sm mb-6 md:mb-8">
-                배경 옵션 준비 중…
+              {/* 배경 선택 그리드 */}
+              <div className="mb-6 md:mb-8">
+                <BgSelectGrid
+                  selected={state.bgId}
+                  onSelect={setBgId}
+                />
               </div>
 
               <button
