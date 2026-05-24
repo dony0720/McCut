@@ -5,7 +5,7 @@ const REQUIRED = 4;
 
 export default function SelectPage() {
   const navigate = useNavigate();
-  const { state, toggleSelect, clearSelection } = useApp();
+  const { state, toggleSelect, clearSelection, resetPhotos } = useApp();
   const { capturedPhotos, selectedIndices } = state;
 
   const total = capturedPhotos.length;
@@ -18,7 +18,7 @@ export default function SelectPage() {
         {/* ── 헤더 ── */}
         <div className="flex items-center gap-3 px-4 md:px-6 pt-5 md:pt-7 pb-3 shrink-0">
           <button
-            onClick={() => navigate("/camera")}
+            onClick={() => { resetPhotos(); navigate("/camera"); }}
             className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-ink/5 flex items-center justify-center transition-all active:scale-90 hover:bg-ink/10 shrink-0"
             aria-label="뒤로가기"
           >
