@@ -1,0 +1,46 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply box-border;
+  }
+
+  html,
+  body,
+  #root {
+    @apply h-full w-full;
+  }
+
+  body {
+    @apply bg-neutral-950 text-white font-sans antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #root {
+    @apply flex flex-col;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-pink-500 hover:bg-pink-600 active:bg-pink-700
+           text-white font-semibold py-3 px-6 rounded-2xl
+           transition-all duration-200 active:scale-95
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100;
+  }
+
+  .btn-secondary {
+    @apply bg-white/10 hover:bg-white/20 active:bg-white/30
+           text-white font-semibold py-3 px-6 rounded-2xl
+           border border-white/20
+           transition-all duration-200 active:scale-95;
+  }
+
+  .card {
+    @apply bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl;
+  }
+}
