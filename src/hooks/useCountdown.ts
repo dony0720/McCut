@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 
 interface UseCountdownOptions {
   from?: number
@@ -40,6 +40,16 @@ export function useCountdown({ from = 3, onComplete }: UseCountdownOptions) {
       }
     }, 1000)
   }, [from, cancel, onComplete])
+
+  // 언마운트 시 인터벌 정리
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+    }
+  }, [])
 
   return { count, start, cancel, isRunning: count !== null }
 }
