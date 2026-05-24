@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { BgId, BgOption } from '@/types'
 
-const BG_OPTIONS: BgOption[] = [
+export const BG_OPTIONS: BgOption[] = [
   { id: 'strawberry', label: '딸기',    fallbackColor: '#fce4ec', imagePath: '/backgrounds/strawberry.jpeg' },
   { id: 'hamburger',  label: '햄버거',  fallbackColor: '#fff8e1', imagePath: '/backgrounds/hamburger.jpeg' },
   { id: 'fries',      label: '감자튀김', fallbackColor: '#fff3e0', imagePath: '/backgrounds/fries.jpeg' },
