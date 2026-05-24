@@ -13,8 +13,8 @@ export default function SelectPage() {
   const canProceed = selectedCount === REQUIRED;
 
   return (
-    <div className="min-h-screen bg-cream-50 flex flex-col items-center">
-      <div className="w-full max-w-sm md:max-w-3xl flex flex-col min-h-screen">
+    <div className="h-[100dvh] bg-cream-50 flex flex-col items-center overflow-hidden">
+      <div className="w-full max-w-sm md:max-w-3xl flex flex-col h-full">
         {/* ── 헤더 ── */}
         <div className="flex items-center gap-3 px-4 md:px-6 pt-5 md:pt-7 pb-3 shrink-0">
           <button
