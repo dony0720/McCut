@@ -9,8 +9,10 @@ const TOTAL_SHOTS = 8
 
 export default function CameraPage() {
   const navigate = useNavigate()
-  const { state, addPhoto } = useApp()
+  const { state, addPhoto, setVideoBlob } = useApp()
   const webcamRef = useRef<Webcam>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const recordedChunksRef = useRef<Blob[]>([])
 
   const [facing, setFacing] = useState<'user' | 'environment'>('user')
   const [isStreamReady, setIsStreamReady] = useState(false)
@@ -41,6 +43,32 @@ export default function CameraPage() {
     prevShotCount.current = shotCount
   }, [shotCount])
 
+  const startRecording = useCallback(() => {
+    const stream = webcamRef.current?.video?.srcObject as MediaStream | null
+    if (!stream) return
+
+    recordedChunksRef.current = []
+    const mimeType = 'video/webm;codecs=vp9'
+    const recorder = new MediaRecorder(stream, { mimeType })
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunksRef.current.push(e.data)
+    }
+    recorder.start(100) // 100ms 단위로 청크 수집
+    mediaRecorderRef.current = recorder
+  }, [])
+
+  const stopRecording = useCallback(() => {
+    const recorder = mediaRecorderRef.current
+    if (!recorder || recorder.state === 'inactive') return
+
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' })
+      setVideoBlob(blob)
+    }
+    recorder.stop()
+    mediaRecorderRef.current = null
+  }, [setVideoBlob])
+
   const handleUserMedia = useCallback(() => {
     setIsStreamReady(true)
     setCameraError(null)
@@ -49,9 +77,10 @@ export default function CameraPage() {
       if (!autoActiveRef.current) {
         autoActiveRef.current = true
         setAutoActiveState(true)
+        startRecording()
       }
     }, 800)
-  }, [])
+  }, [startRecording])
 
   const handleUserMediaError = useCallback((err: string | DOMException) => {
     const name = typeof err === 'string' ? err : err.name
@@ -90,6 +119,7 @@ export default function CameraPage() {
 
     if (nextCount >= TOTAL_SHOTS) {
       setAutoActive(false)
+      stopRecording()
       setTimeout(() => navigate('/select'), 400)
       return
     }
@@ -99,7 +129,7 @@ export default function CameraPage() {
         if (autoActiveRef.current) startCountdown()
       }, 300)
     }
-  }, [addPhoto, navigate, triggerCaptureEffect, setAutoActive])
+  }, [addPhoto, navigate, triggerCaptureEffect, setAutoActive, stopRecording])
 
   const { capture, flashVisible } = useShutter({
     webcamRef,
@@ -124,6 +154,13 @@ export default function CameraPage() {
       startCountdown()
     }
   }, [autoActive]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 언마운트 시 녹화 정리
+  useEffect(() => {
+    return () => {
+      mediaRecorderRef.current?.stop()
+    }
+  }, [])
 
   void capture
 
