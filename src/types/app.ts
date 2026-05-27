@@ -12,8 +12,10 @@ export interface AppState {
   bgId: BgId
   /** Canvas 합성 결과 이미지 (data URL) */
   composedImage: string | null
-  /** 촬영 중 녹화된 영상 Blob */
+  /** 촬영 중 녹화된 영상 Blob (전체 세션) */
   videoBlob: Blob | null
+  /** 카운트다운별 개별 클립 Blob 배열 (최대 8개) */
+  clipBlobs: Blob[]
   /** 공유용 고유 ID */
   shareId: string | null
 }

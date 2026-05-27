@@ -9,10 +9,12 @@ const TOTAL_SHOTS = 8
 
 export default function CameraPage() {
   const navigate = useNavigate()
-  const { state, addPhoto, setVideoBlob } = useApp()
+  const { state, addPhoto, setVideoBlob, addClip } = useApp()
   const webcamRef = useRef<Webcam>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const recordedChunksRef = useRef<Blob[]>([])
+  const clipRecorderRef = useRef<MediaRecorder | null>(null)
+  const clipChunksRef = useRef<Blob[]>([])
 
   const [facing, setFacing] = useState<'user' | 'environment'>('user')
   const [isStreamReady, setIsStreamReady] = useState(false)
@@ -42,6 +44,33 @@ export default function CameraPage() {
     }
     prevShotCount.current = shotCount
   }, [shotCount])
+
+  const startClipRecording = useCallback(() => {
+    const stream = webcamRef.current?.video?.srcObject as MediaStream | null
+    if (!stream) return
+
+    clipChunksRef.current = []
+    const mimeType = 'video/webm;codecs=vp9'
+    const recorder = new MediaRecorder(stream, { mimeType })
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) clipChunksRef.current.push(e.data)
+    }
+    recorder.start(100)
+    clipRecorderRef.current = recorder
+  }, [])
+
+  const stopClipRecording = useCallback(() => {
+    const recorder = clipRecorderRef.current
+    if (!recorder || recorder.state === 'inactive') return
+
+    recorder.onstop = () => {
+      const blob = new Blob(clipChunksRef.current, { type: 'video/webm' })
+      addClip(blob)
+      clipChunksRef.current = []
+    }
+    recorder.stop()
+    clipRecorderRef.current = null
+  }, [addClip])
 
   const startRecording = useCallback(() => {
     const stream = webcamRef.current?.video?.srcObject as MediaStream | null
@@ -78,9 +107,10 @@ export default function CameraPage() {
         autoActiveRef.current = true
         setAutoActiveState(true)
         startRecording()
+        startClipRecording()
       }
     }, 800)
-  }, [startRecording])
+  }, [startRecording, startClipRecording])
 
   const handleUserMediaError = useCallback((err: string | DOMException) => {
     const name = typeof err === 'string' ? err : err.name
@@ -117,19 +147,25 @@ export default function CameraPage() {
     addPhoto(dataUrl)
     const nextCount = shotCountRef.current + 1
 
+    // 촬영 순간 이후 0.5초 더 녹화 후 클립 저장
+    setTimeout(() => stopClipRecording(), 500)
+
     if (nextCount >= TOTAL_SHOTS) {
       setAutoActive(false)
       stopRecording()
-      setTimeout(() => navigate('/select'), 400)
+      setTimeout(() => navigate('/select'), 600)
       return
     }
 
     if (autoActiveRef.current) {
       setTimeout(() => {
-        if (autoActiveRef.current) startCountdown()
-      }, 300)
+        if (autoActiveRef.current) {
+          startClipRecording()
+          startCountdown()
+        }
+      }, 400)
     }
-  }, [addPhoto, navigate, triggerCaptureEffect, setAutoActive, stopRecording])
+  }, [addPhoto, navigate, triggerCaptureEffect, setAutoActive, stopRecording, stopClipRecording, startClipRecording])
 
   const { capture, flashVisible } = useShutter({
     webcamRef,
@@ -159,6 +195,7 @@ export default function CameraPage() {
   useEffect(() => {
     return () => {
       mediaRecorderRef.current?.stop()
+      clipRecorderRef.current?.stop()
     }
   }, [])
 

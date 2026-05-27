@@ -11,7 +11,7 @@ function makeDisplayId() {
 export default function ResultPage() {
   const navigate = useNavigate();
   const { state, setComposedImage, reset } = useApp();
-  const { capturedPhotos, selectedIndices, frameStyle, bgId, composedImage } =
+  const { capturedPhotos, selectedIndices, frameStyle, bgId, composedImage, videoBlob } =
     state;
 
   const displayId = useRef(makeDisplayId());
@@ -88,6 +88,18 @@ export default function ResultPage() {
     // (URL 공유는 세션 상태에 의존하므로 의미 없음)
     downloadImage();
     showToast("이미지를 저장했습니다. 갤러리에서 공유해주세요 😊");
+  }
+
+  // ── 영상 저장 ─────────────────────────────────────────────────────────────
+  function handleVideoSave() {
+    if (!videoBlob) return;
+    const url = URL.createObjectURL(videoBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `mccut_${displayId.current}.webm`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("영상이 저장되었습니다 🎬");
   }
 
   // ── 다시 찍기 ─────────────────────────────────────────────────────────────
@@ -246,6 +258,29 @@ export default function ResultPage() {
             </svg>
             공유
           </button>
+
+          {/* 영상 저장 — videoBlob 있을 때만 표시 */}
+          {videoBlob && (
+            <button
+              onClick={handleVideoSave}
+              className="flex items-center gap-2 px-4 py-3.5 rounded-full border-2 border-ink/20 bg-white text-ink font-semibold text-sm md:text-base transition-all active:scale-95 hover:bg-ink/5 shrink-0"
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polygon points="23 7 16 12 23 17 23 7" />
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+              </svg>
+              영상
+            </button>
+          )}
 
           {/* 저장하기 */}
           <button

@@ -18,6 +18,7 @@ const initialState: AppState = {
   bgId: 'strawberry',
   composedImage: null,
   videoBlob: null,
+  clipBlobs: [],
   shareId: null,
 }
 
@@ -33,6 +34,7 @@ type Action =
   | { type: 'SET_BG_ID'; payload: BgId }
   | { type: 'SET_COMPOSED_IMAGE'; payload: string }
   | { type: 'SET_VIDEO_BLOB'; payload: Blob }
+  | { type: 'ADD_CLIP'; payload: Blob }
   | { type: 'SET_SHARE_ID'; payload: string }
   | { type: 'RESET' }
 
@@ -60,7 +62,7 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, selectedIndices: [], composedImage: null }
 
     case 'RESET_PHOTOS':
-      return { ...state, capturedPhotos: [], selectedIndices: [], composedImage: null, videoBlob: null }
+      return { ...state, capturedPhotos: [], selectedIndices: [], composedImage: null, videoBlob: null, clipBlobs: [] }
 
     case 'SET_FRAME_STYLE':
       return { ...state, frameStyle: action.payload, composedImage: null }
@@ -73,6 +75,9 @@ function reducer(state: AppState, action: Action): AppState {
 
     case 'SET_VIDEO_BLOB':
       return { ...state, videoBlob: action.payload }
+
+    case 'ADD_CLIP':
+      return { ...state, clipBlobs: [...state.clipBlobs, action.payload] }
 
     case 'SET_SHARE_ID':
       return { ...state, shareId: action.payload }
@@ -98,6 +103,7 @@ interface AppContextValue {
   setBgId: (id: BgId) => void
   setComposedImage: (dataUrl: string) => void
   setVideoBlob: (blob: Blob) => void
+  addClip: (blob: Blob) => void
   setShareId: (id: string) => void
   reset: () => void
 }
@@ -145,6 +151,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_VIDEO_BLOB', payload: blob })
   }, [])
 
+  const addClip = useCallback((blob: Blob) => {
+    dispatch({ type: 'ADD_CLIP', payload: blob })
+  }, [])
+
   const setShareId = useCallback((id: string) => {
     dispatch({ type: 'SET_SHARE_ID', payload: id })
   }, [])
@@ -155,7 +165,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider
-      value={{ state, addPhoto, setPhotos, toggleSelect, clearSelection, resetPhotos, setFrameStyle, setBgId, setComposedImage, setVideoBlob, setShareId, reset }}
+      value={{ state, addPhoto, setPhotos, toggleSelect, clearSelection, resetPhotos, setFrameStyle, setBgId, setComposedImage, setVideoBlob, addClip, setShareId, reset }}
     >
       {children}
     </AppContext.Provider>
