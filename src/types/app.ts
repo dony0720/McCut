@@ -16,6 +16,8 @@ export interface AppState {
   videoBlob: Blob | null
   /** 카운트다운별 개별 클립 Blob 배열 (최대 8개) */
   clipBlobs: Blob[]
+  /** 각 클립의 실제 녹화 길이 (ms) */
+  clipDurations: number[]
   /** 공유용 고유 ID */
   shareId: string | null
 }

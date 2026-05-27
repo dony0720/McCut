@@ -12,10 +12,11 @@ function makeDisplayId() {
 export default function ResultPage() {
   const navigate = useNavigate();
   const { state, setComposedImage, reset } = useApp();
-  const { capturedPhotos, selectedIndices, frameStyle, bgId, composedImage, clipBlobs } =
+  const { capturedPhotos, selectedIndices, frameStyle, bgId, composedImage, clipBlobs, clipDurations } =
     state;
 
   const selectedClips = selectedIndices.map((i) => clipBlobs[i]).filter(Boolean) as Blob[]
+  const selectedDurations = selectedIndices.map((i) => clipDurations[i] ?? 0)
 
   const displayId = useRef(makeDisplayId());
   const [toast, setToast] = useState<string | null>(null);
@@ -57,6 +58,7 @@ export default function ResultPage() {
 
   const { compose: composeClip, isComposing: isComposingClip } = useClipComposer({
     clips: selectedClips,
+    clipDurations: selectedDurations,
     bgId,
     frameStyle,
     onComplete: handleClipComposed,

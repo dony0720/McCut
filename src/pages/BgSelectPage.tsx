@@ -54,14 +54,14 @@ export default function BgSelectPage() {
         </div>
 
         {/* ── 합성 미리보기 ── */}
-        <div className="flex-1 flex items-center justify-center px-4 md:px-6 min-h-0 py-2">
-          <div className="relative h-full max-h-full rounded-2xl overflow-hidden bg-white/5 flex items-center justify-center aspect-[640/1200]">
+        <div className="flex-1 flex items-center justify-center px-4 md:px-6 min-h-0">
+          <div className="relative h-full max-h-full rounded-2xl overflow-hidden flex items-center justify-center aspect-[1280/2200]">
             {previewUrl ? (
               <>
                 <img
                   src={previewUrl}
                   alt="합성 미리보기"
-                  className="h-full w-auto object-contain"
+                  className="h-full w-full object-cover"
                 />
                 {isComposing && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-2xl">
