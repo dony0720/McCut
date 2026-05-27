@@ -27,7 +27,7 @@ interface Layout {
 const CANVAS_H = 1100; // ← 이 값으로 배경 높이 조절
 
 function getLayout(style: FrameStyle): Layout {
-  const cw = 640;
+  const cw = 1280;
   const ch = CANVAS_H;
 
   switch (style) {
@@ -306,20 +306,6 @@ export function useComposer({
         const photo = await loadImage(photos[i]);
         drawCrop(ctx, photo, cell, 8);
 
-        // 번호 라벨 (우상단)
-        const lW = 32,
-          lH = 18;
-        const lx = cell.x + cell.w - lW - 4;
-        const ly = cell.y + 4;
-        ctx.fillStyle = "rgba(255,255,255,0.82)";
-        ctx.beginPath();
-        ctx.roundRect(lx, ly, lW, lH, 9);
-        ctx.fill();
-        ctx.fillStyle = "rgba(26,22,20,0.85)";
-        ctx.font = "bold 10px monospace";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(`0${i + 1}`, lx + lW / 2, ly + lH / 2);
       }
 
       // 4. 브랜드 텍스트 (사진 그리드 아래, 상해찬미 폰트)
@@ -346,7 +332,7 @@ export function useComposer({
       }
 
       if (!abortedRef.current) {
-        onComplete(canvas.toDataURL("image/jpeg", 0.92));
+        onComplete(canvas.toDataURL("image/jpeg", 1.0));
       }
     } catch (err) {
       if (!abortedRef.current) {
