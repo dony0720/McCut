@@ -24,7 +24,7 @@ interface Layout {
 //  CANVAS_H: 배경 이미지 세로 크기 고정 (Portrait 비율 유지)
 //  사진은 캔버스 중앙 42% 지점을 기준으로 배치
 
-const CANVAS_H = 2400; // ← 이 값으로 배경 높이 조절 (cw 1280 기준 세로 비율 유지)
+const CANVAS_H = 2200; // 사진 비율 4:5 기준 세로 비율 유지
 
 function getLayout(style: FrameStyle): Layout {
   const cw = 1280;
@@ -36,7 +36,7 @@ function getLayout(style: FrameStyle): Layout {
       const gap = 48;
       const pad = 80;
       const photoW = Math.floor((cw - pad * 2 - gap) / 2);
-      const photoH = Math.round(photoW * (3 / 2));
+      const photoH = Math.round(photoW * (5 / 4));
       const panelW = photoW * 2 + gap;
       const panelH = photoH * 2 + gap;
       const panelX = Math.round((cw - panelW) / 2);

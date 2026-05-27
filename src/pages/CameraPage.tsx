@@ -9,8 +9,12 @@ const TOTAL_SHOTS = 8
 
 export default function CameraPage() {
   const navigate = useNavigate()
-  const { state, addPhoto } = useApp()
+  const { state, addPhoto, setVideoBlob, addClip } = useApp()
   const webcamRef = useRef<Webcam>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const recordedChunksRef = useRef<Blob[]>([])
+  const clipRecorderRef = useRef<MediaRecorder | null>(null)
+  const clipChunksRef = useRef<Blob[]>([])
 
   const [facing, setFacing] = useState<'user' | 'environment'>('user')
   const [isStreamReady, setIsStreamReady] = useState(false)
@@ -41,6 +45,63 @@ export default function CameraPage() {
     prevShotCount.current = shotCount
   }, [shotCount])
 
+  const startClipRecording = useCallback(() => {
+    const stream = webcamRef.current?.video?.srcObject as MediaStream | null
+    if (!stream) return
+
+    clipChunksRef.current = []
+    const mimeType = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(
+      (t) => MediaRecorder.isTypeSupported(t),
+    ) ?? ''
+    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) clipChunksRef.current.push(e.data)
+    }
+    recorder.start(100)
+    clipRecorderRef.current = recorder
+  }, [])
+
+  const stopClipRecording = useCallback(() => {
+    const recorder = clipRecorderRef.current
+    if (!recorder || recorder.state === 'inactive') return
+
+    recorder.onstop = () => {
+      const blob = new Blob(clipChunksRef.current, { type: 'video/webm' })
+      addClip(blob)
+      clipChunksRef.current = []
+    }
+    recorder.stop()
+    clipRecorderRef.current = null
+  }, [addClip])
+
+  const startRecording = useCallback(() => {
+    const stream = webcamRef.current?.video?.srcObject as MediaStream | null
+    if (!stream) return
+
+    recordedChunksRef.current = []
+    const mimeType = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(
+      (t) => MediaRecorder.isTypeSupported(t),
+    ) ?? ''
+    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunksRef.current.push(e.data)
+    }
+    recorder.start(100) // 100ms 단위로 청크 수집
+    mediaRecorderRef.current = recorder
+  }, [])
+
+  const stopRecording = useCallback(() => {
+    const recorder = mediaRecorderRef.current
+    if (!recorder || recorder.state === 'inactive') return
+
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' })
+      setVideoBlob(blob)
+    }
+    recorder.stop()
+    mediaRecorderRef.current = null
+  }, [setVideoBlob])
+
   const handleUserMedia = useCallback(() => {
     setIsStreamReady(true)
     setCameraError(null)
@@ -49,9 +110,11 @@ export default function CameraPage() {
       if (!autoActiveRef.current) {
         autoActiveRef.current = true
         setAutoActiveState(true)
+        startRecording()
+        startClipRecording()
       }
     }, 800)
-  }, [])
+  }, [startRecording, startClipRecording])
 
   const handleUserMediaError = useCallback((err: string | DOMException) => {
     const name = typeof err === 'string' ? err : err.name
@@ -88,18 +151,28 @@ export default function CameraPage() {
     addPhoto(dataUrl)
     const nextCount = shotCountRef.current + 1
 
-    if (nextCount >= TOTAL_SHOTS) {
-      setAutoActive(false)
-      setTimeout(() => navigate('/select'), 400)
-      return
-    }
+    // 촬영 순간 이후 0.5초 더 녹화 → 클립 저장 → 다음 클립 시작
+    setTimeout(() => {
+      stopClipRecording()  // 현재 클립 저장
 
-    if (autoActiveRef.current) {
-      setTimeout(() => {
-        if (autoActiveRef.current) startCountdown()
-      }, 300)
-    }
-  }, [addPhoto, navigate, triggerCaptureEffect, setAutoActive])
+      if (nextCount >= TOTAL_SHOTS) {
+        setAutoActive(false)
+        stopRecording()
+        setTimeout(() => navigate('/select'), 300)
+        return
+      }
+
+      if (autoActiveRef.current) {
+        // 이전 클립 onstop 처리 후 다음 클립 시작 (200ms 여유)
+        setTimeout(() => {
+          if (autoActiveRef.current) {
+            startClipRecording()
+            startCountdown()
+          }
+        }, 200)
+      }
+    }, 500)
+  }, [addPhoto, navigate, triggerCaptureEffect, setAutoActive, stopRecording, stopClipRecording, startClipRecording])
 
   const { capture, flashVisible } = useShutter({
     webcamRef,
@@ -124,6 +197,14 @@ export default function CameraPage() {
       startCountdown()
     }
   }, [autoActive]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 언마운트 시 녹화 정리
+  useEffect(() => {
+    return () => {
+      mediaRecorderRef.current?.stop()
+      clipRecorderRef.current?.stop()
+    }
+  }, [])
 
   void capture
 
