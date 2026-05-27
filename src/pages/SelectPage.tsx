@@ -14,7 +14,7 @@ export default function SelectPage() {
 
   return (
     <div className="h-[100dvh] bg-cream-50 flex flex-col items-center overflow-hidden">
-      <div className="w-full max-w-sm md:max-w-3xl flex flex-col h-full">
+      <div className="w-full box-border flex flex-col h-full">
         {/* ── 헤더 ── */}
         <div className="flex items-center gap-3 px-4 md:px-6 pt-5 md:pt-7 pb-3 shrink-0">
           <button
