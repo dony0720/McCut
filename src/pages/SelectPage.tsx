@@ -150,6 +150,7 @@ export default function SelectPage() {
           </button>
         </div>
       </div>
+
     </div>
   );
 }
