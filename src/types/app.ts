@@ -12,6 +12,8 @@ export interface AppState {
   bgId: BgId
   /** Canvas 합성 결과 이미지 (data URL) */
   composedImage: string | null
+  /** 촬영 중 녹화된 영상 Blob */
+  videoBlob: Blob | null
   /** 공유용 고유 ID */
   shareId: string | null
 }
