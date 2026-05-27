@@ -4,14 +4,14 @@ import { BG_OPTIONS } from '@/components/BgSelectGrid'
 
 // ─── 레이아웃 상수 (useComposer와 동일) ──────────────────────────────────────
 
-const CANVAS_H = 2400
+const CANVAS_H = 2200
 const CW       = 1280
 const GAP      = 48
 const PAD      = 80
 
 function getClassicCells() {
   const photoW = Math.floor((CW - PAD * 2 - GAP) / 2)
-  const photoH = Math.round(photoW * (3 / 2))
+  const photoH = Math.round(photoW * (5 / 4))
   const panelW = photoW * 2 + GAP
   const panelH = photoH * 2 + GAP
   const panelX = Math.round((CW - panelW) / 2)
