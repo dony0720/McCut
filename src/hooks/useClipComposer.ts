@@ -146,9 +146,12 @@ export function useClipComposer({ clips, bgId, frameStyle: _frameStyle, onComple
         await document.fonts.ready
       } catch { /* 폰트 로드 실패 시 기본 폰트 사용 */ }
 
-      // Canvas 스트림 캡처 → MediaRecorder
-      const stream   = canvas.captureStream(30)
-      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' })
+      // Canvas 스트림 캡처 → MediaRecorder (코덱 폴백)
+      const stream  = canvas.captureStream(30)
+      const mimeType = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(
+        (t) => MediaRecorder.isTypeSupported(t),
+      ) ?? ''
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
       const chunks: Blob[] = []
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data) }
       recorder.start(100)

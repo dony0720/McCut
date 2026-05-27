@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
 import { useComposer } from "@/hooks/useComposer";
+import { useClipComposer } from "@/hooks/useClipComposer";
 
 /** 6자리 디스플레이 ID 생성 (세션당 고정) */
 function makeDisplayId() {
@@ -11,18 +12,20 @@ function makeDisplayId() {
 export default function ResultPage() {
   const navigate = useNavigate();
   const { state, setComposedImage, reset } = useApp();
-  const { capturedPhotos, selectedIndices, frameStyle, bgId, composedImage, videoBlob } =
+  const { capturedPhotos, selectedIndices, frameStyle, bgId, composedImage, clipBlobs } =
     state;
+
+  const selectedClips = selectedIndices.map((i) => clipBlobs[i]).filter(Boolean) as Blob[]
 
   const displayId = useRef(makeDisplayId());
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function showToast(msg: string) {
+  const showToast = useCallback((msg: string) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast(msg);
     toastTimer.current = setTimeout(() => setToast(null), 3000);
-  }
+  }, [])
 
   const selectedPhotos = selectedIndices.map((i) => capturedPhotos[i]);
 
@@ -39,6 +42,25 @@ export default function ResultPage() {
     frameStyle,
     onComplete: handleComposed,
   });
+
+  const handleClipComposed = useCallback((blob: Blob) => {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `mccut_${displayId.current}.webm`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    showToast('영상이 저장되었습니다 🎬')
+  }, [showToast])
+
+  const { compose: composeClip, isComposing: isComposingClip } = useClipComposer({
+    clips: selectedClips,
+    bgId,
+    frameStyle,
+    onComplete: handleClipComposed,
+  })
 
   // 마운트 시 자동 합성 (이미 합성된 경우 스킵)
   useEffect(() => {
@@ -92,14 +114,8 @@ export default function ResultPage() {
 
   // ── 영상 저장 ─────────────────────────────────────────────────────────────
   function handleVideoSave() {
-    if (!videoBlob) return;
-    const url = URL.createObjectURL(videoBlob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `mccut_${displayId.current}.webm`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast("영상이 저장되었습니다 🎬");
+    if (selectedClips.length < 4 || isComposingClip) return
+    composeClip()
   }
 
   // ── 다시 찍기 ─────────────────────────────────────────────────────────────
@@ -259,26 +275,33 @@ export default function ResultPage() {
             공유
           </button>
 
-          {/* 영상 저장 — videoBlob 있을 때만 표시 */}
-          {videoBlob && (
+          {/* 영상 저장 — 선택된 클립 4개 있을 때만 표시 */}
+          {selectedClips.length === 4 && (
             <button
               onClick={handleVideoSave}
-              className="flex items-center gap-2 px-4 py-3.5 rounded-full border-2 border-ink/20 bg-white text-ink font-semibold text-sm md:text-base transition-all active:scale-95 hover:bg-ink/5 shrink-0"
+              disabled={isComposingClip}
+              className={[
+                'flex items-center gap-2 px-4 py-3.5 rounded-full border-2 transition-all shrink-0',
+                'font-semibold text-sm md:text-base',
+                isComposingClip
+                  ? 'border-ink/10 bg-ink/5 text-ink/40 cursor-not-allowed'
+                  : 'border-ink/20 bg-white text-ink active:scale-95 hover:bg-ink/5',
+              ].join(' ')}
             >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polygon points="23 7 16 12 23 17 23 7" />
-                <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-              </svg>
-              영상
+              {isComposingClip ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-ink/30 border-t-ink/70 rounded-full animate-spin" />
+                  합성 중…
+                </>
+              ) : (
+                <>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="23 7 16 12 23 17 23 7" />
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                  </svg>
+                  영상
+                </>
+              )}
             </button>
           )}
 
