@@ -1,26 +1,14 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import IconBox from '@/components/IconBox'
-import FrameSelectModal from '@/components/FrameSelectModal'
 import { useApp } from '@/context/AppContext'
 
 export default function WelcomePage() {
   const navigate = useNavigate()
   const { reset } = useApp()
-  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  function handleOpenModal() {
+  function handleStart() {
     reset()
-    setIsModalOpen(true)
-  }
-
-  function handleConfirm() {
-    setIsModalOpen(false)
     navigate('/camera')
-  }
-
-  function handleCloseModal() {
-    setIsModalOpen(false)
   }
 
   return (
@@ -82,7 +70,7 @@ export default function WelcomePage() {
 
             {/* 촬영하기 */}
             <button
-              onClick={handleOpenModal}
+              onClick={handleStart}
               className="w-full py-4 md:py-5 bg-ink hover:bg-ink/80 text-cream-100 font-gaegu font-bold text-xl md:text-2xl rounded-full border-[3px] border-ink transition-all duration-150 active:scale-95"
             >
               촬영하기
@@ -131,13 +119,6 @@ export default function WelcomePage() {
         </div>
       </div>
 
-      {/* 프레임 선택 모달 */}
-      {isModalOpen && (
-        <FrameSelectModal
-          onClose={handleCloseModal}
-          onConfirm={handleConfirm}
-        />
-      )}
     </div>
   )
 }

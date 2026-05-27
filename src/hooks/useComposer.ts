@@ -24,17 +24,17 @@ interface Layout {
 //  CANVAS_H: 배경 이미지 세로 크기 고정 (Portrait 비율 유지)
 //  사진은 캔버스 중앙 42% 지점을 기준으로 배치
 
-const CANVAS_H = 1100; // ← 이 값으로 배경 높이 조절
+const CANVAS_H = 2400; // ← 이 값으로 배경 높이 조절 (cw 1280 기준 세로 비율 유지)
 
 function getLayout(style: FrameStyle): Layout {
-  const cw = 640;
+  const cw = 1280;
   const ch = CANVAS_H;
 
   switch (style) {
     // ── classic: 2×2 그리드 ──────────────────────────────────────────────────
     case "classic": {
-      const gap = 24;
-      const pad = 40;
+      const gap = 48;
+      const pad = 80;
       const photoW = Math.floor((cw - pad * 2 - gap) / 2);
       const photoH = Math.round(photoW * (3 / 2));
       const panelW = photoW * 2 + gap;
@@ -68,8 +68,8 @@ function getLayout(style: FrameStyle): Layout {
 
     // ── strip: 세로 1×4 ──────────────────────────────────────────────────────
     case "strip": {
-      const gap = 24;
-      const pad = 40;
+      const gap = 48;
+      const pad = 80;
       const photoW = Math.floor(cw - pad * 2);
       const photoH = Math.round(photoW * (3 / 4));
       const panelH = photoH * 4 + gap * 3;
@@ -97,8 +97,8 @@ function getLayout(style: FrameStyle): Layout {
 
     // ── dark: 2×2 정사각형 ───────────────────────────────────────────────────
     case "dark": {
-      const gap = 24;
-      const pad = 40;
+      const gap = 48;
+      const pad = 80;
       const photoW = Math.floor((cw - pad * 2 - gap) / 2);
       const photoH = Math.round(photoW * (4 / 3));
       const panelW = photoW * 2 + gap;
@@ -133,8 +133,8 @@ function getLayout(style: FrameStyle): Layout {
     // ── mint: 좌 1장 + 우 3장(스택) ─────────────────────────────────────────
     case "mint":
     default: {
-      const gap = 24;
-      const pad = 40;
+      const gap = 48;
+      const pad = 80;
       const areaW = cw - pad * 2;
       const leftW = Math.round(areaW * 0.54);
       const rightW = areaW - leftW - gap;
@@ -281,11 +281,11 @@ export function useComposer({
       try {
         const logoImg = await loadImage("/logo.png");
         if (!abortedRef.current) {
-          const logoH = 100;
+          const logoH = 200;
           const logoW = Math.round(
             logoImg.naturalWidth * (logoH / logoImg.naturalHeight),
           );
-          const logoPad = 20;
+          const logoPad = 40;
           ctx.drawImage(
             logoImg,
             layout.canvasW - logoW - logoPad,
@@ -306,20 +306,6 @@ export function useComposer({
         const photo = await loadImage(photos[i]);
         drawCrop(ctx, photo, cell, 8);
 
-        // 번호 라벨 (우상단)
-        const lW = 32,
-          lH = 18;
-        const lx = cell.x + cell.w - lW - 4;
-        const ly = cell.y + 4;
-        ctx.fillStyle = "rgba(255,255,255,0.82)";
-        ctx.beginPath();
-        ctx.roundRect(lx, ly, lW, lH, 9);
-        ctx.fill();
-        ctx.fillStyle = "rgba(26,22,20,0.85)";
-        ctx.font = "bold 10px monospace";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(`0${i + 1}`, lx + lW / 2, ly + lH / 2);
       }
 
       // 4. 브랜드 텍스트 (사진 그리드 아래, 상해찬미 폰트)
@@ -337,8 +323,8 @@ export function useComposer({
           // 폰트 로드 실패 시 기본 폰트로 폴백
         }
         const panel = layout.panel;
-        const textY = panel.y + panel.h + 100;
-        ctx.font = `40px ${fontFamily}, sans-serif`;
+        const textY = panel.y + panel.h + 200;
+        ctx.font = `80px ${fontFamily}, sans-serif`;
         ctx.fillStyle = "rgba(255,255,255,0.90)";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -346,7 +332,7 @@ export function useComposer({
       }
 
       if (!abortedRef.current) {
-        onComplete(canvas.toDataURL("image/jpeg", 0.92));
+        onComplete(canvas.toDataURL("image/jpeg", 1.0));
       }
     } catch (err) {
       if (!abortedRef.current) {

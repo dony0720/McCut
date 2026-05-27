@@ -44,6 +44,13 @@ export default function CameraPage() {
   const handleUserMedia = useCallback(() => {
     setIsStreamReady(true)
     setCameraError(null)
+    // 스트림 준비되면 자동 촬영 시작 (약간의 딜레이로 카메라 안정화)
+    setTimeout(() => {
+      if (!autoActiveRef.current) {
+        autoActiveRef.current = true
+        setAutoActiveState(true)
+      }
+    }, 800)
   }, [])
 
   const handleUserMediaError = useCallback((err: string | DOMException) => {
@@ -111,22 +118,16 @@ export default function CameraPage() {
     if (flashVisible) triggerCaptureEffect()
   }, [flashVisible, triggerCaptureEffect])
 
-  function handleShutter() {
-    if (shotCount >= TOTAL_SHOTS || !isStreamReady || cameraError === 'permission') return
-
-    if (autoActive || isRunning) {
-      setAutoActive(false)
-      cancelCountdown()
-    } else {
-      setAutoActive(true)
+  // autoActive가 true로 바뀌면 카운트다운 시작
+  useEffect(() => {
+    if (autoActive && !isRunning && shotCount < TOTAL_SHOTS) {
       startCountdown()
     }
-  }
+  }, [autoActive]) // eslint-disable-line react-hooks/exhaustive-deps
 
   void capture
 
   const isActive = autoActive || isRunning
-  const isDisabled = shotCount >= TOTAL_SHOTS || !isStreamReady || cameraError === 'permission'
 
   return (
     <div className="h-[100dvh] bg-[#1c1814] flex flex-col items-center overflow-hidden">
@@ -263,29 +264,16 @@ export default function CameraPage() {
           </div>
         </div>
 
-        {/* ── 셔터 버튼 ── */}
-        <div className="shrink-0 px-4 md:px-6 pt-6 pb-10 md:pb-14 flex flex-col items-center gap-3">
-          <button
-            onClick={handleShutter}
-            disabled={isDisabled}
-            className={[
-              'w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center',
-              'transition-all duration-200',
-              isDisabled
-                ? 'bg-coral/40 border-[4px] border-white/20 cursor-not-allowed'
-                : isActive
-                  ? 'bg-white/20 border-[4px] border-white/40 hover:bg-white/30 active:scale-90'
-                  : 'bg-coral border-[4px] border-white/30 hover:brightness-110 active:scale-90 anim-shutter-idle',
-            ].join(' ')}
-          >
-            <span className="font-gaegu font-bold text-white text-lg md:text-xl">
-              {isActive ? '정지' : '찰칵'}
-            </span>
-          </button>
-
+        {/* ── 촬영 상태 표시 ── */}
+        <div className="shrink-0 px-4 md:px-6 pt-4 pb-10 md:pb-14 flex flex-col items-center gap-2">
           {isActive && (
-            <p className="text-white/40 text-xs font-gaegu animate-pulse">
-              자동 촬영 중…
+            <p className="text-white/50 text-sm font-gaegu animate-pulse tracking-widest">
+              촬영 중…
+            </p>
+          )}
+          {!isActive && !isRunning && shotCount < TOTAL_SHOTS && isStreamReady && (
+            <p className="text-white/40 text-sm font-gaegu tracking-widest">
+              카메라 준비 중…
             </p>
           )}
         </div>
