@@ -19,6 +19,7 @@ const initialState: AppState = {
   composedImage: null,
   videoBlob: null,
   clipBlobs: [],
+  clipDurations: [],
   shareId: null,
 }
 
@@ -34,7 +35,7 @@ type Action =
   | { type: 'SET_BG_ID'; payload: BgId }
   | { type: 'SET_COMPOSED_IMAGE'; payload: string }
   | { type: 'SET_VIDEO_BLOB'; payload: Blob }
-  | { type: 'ADD_CLIP'; payload: Blob }
+  | { type: 'ADD_CLIP'; payload: { blob: Blob; durationMs: number } }
   | { type: 'SET_SHARE_ID'; payload: string }
   | { type: 'RESET' }
 
@@ -62,7 +63,7 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, selectedIndices: [], composedImage: null }
 
     case 'RESET_PHOTOS':
-      return { ...state, capturedPhotos: [], selectedIndices: [], composedImage: null, videoBlob: null, clipBlobs: [] }
+      return { ...state, capturedPhotos: [], selectedIndices: [], composedImage: null, videoBlob: null, clipBlobs: [], clipDurations: [] }
 
     case 'SET_FRAME_STYLE':
       return { ...state, frameStyle: action.payload, composedImage: null }
@@ -77,7 +78,11 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, videoBlob: action.payload }
 
     case 'ADD_CLIP':
-      return { ...state, clipBlobs: [...state.clipBlobs, action.payload] }
+      return {
+        ...state,
+        clipBlobs: [...state.clipBlobs, action.payload.blob],
+        clipDurations: [...state.clipDurations, action.payload.durationMs],
+      }
 
     case 'SET_SHARE_ID':
       return { ...state, shareId: action.payload }
@@ -103,7 +108,7 @@ interface AppContextValue {
   setBgId: (id: BgId) => void
   setComposedImage: (dataUrl: string) => void
   setVideoBlob: (blob: Blob) => void
-  addClip: (blob: Blob) => void
+  addClip: (blob: Blob, durationMs: number) => void
   setShareId: (id: string) => void
   reset: () => void
 }
@@ -151,8 +156,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_VIDEO_BLOB', payload: blob })
   }, [])
 
-  const addClip = useCallback((blob: Blob) => {
-    dispatch({ type: 'ADD_CLIP', payload: blob })
+  const addClip = useCallback((blob: Blob, durationMs: number) => {
+    dispatch({ type: 'ADD_CLIP', payload: { blob, durationMs } })
   }, [])
 
   const setShareId = useCallback((id: string) => {

@@ -47,8 +47,8 @@ function loadVideo(blob: Blob): Promise<HTMLVideoElement> {
     video.muted = true
     video.loop  = true
     video.playsInline = true
-    video.oncanplay = () => resolve(video)
-    video.onerror   = () => reject(new Error('비디오 로드 실패'))
+    video.onloadedmetadata = () => resolve(video)
+    video.onerror          = () => reject(new Error('비디오 로드 실패'))
     video.load()
   })
 }
@@ -92,14 +92,15 @@ function drawVideoCrop(
 
 interface UseClipComposerOptions {
   clips: Blob[]
+  clipDurations: number[]
   bgId: BgId
   frameStyle: FrameStyle
   onComplete: (blob: Blob) => void
 }
 
-const RECORD_DURATION_MS = 5000  // 5초 녹화
+const MIN_RECORD_MS = 3000  // 최소 녹화 길이 (3초)
 
-export function useClipComposer({ clips, bgId, frameStyle: _frameStyle, onComplete }: UseClipComposerOptions) {
+export function useClipComposer({ clips, clipDurations, bgId, frameStyle: _frameStyle, onComplete }: UseClipComposerOptions) {
   const [isComposing, setIsComposing] = useState(false)
   const [error, setError]             = useState<string | null>(null)
 
@@ -127,6 +128,11 @@ export function useClipComposer({ clips, bgId, frameStyle: _frameStyle, onComple
       // 4개 비디오 로드
       const videos = await Promise.all(clips.slice(0, 4).map(loadVideo))
       videos.forEach(v => videoUrls.push(v.src))
+
+      // 선택된 클립의 실제 녹화 길이 기반으로 합성 영상 길이 결정
+      const selectedDurations = clipDurations.filter((_, i) => i < clips.length)
+      const maxDurationMs = selectedDurations.length > 0 ? Math.max(...selectedDurations) : 0
+      const recordDurationMs = Math.max(maxDurationMs, MIN_RECORD_MS)
 
       // 비디오 재생 시작
       await Promise.all(videos.map(v => v.play()))
@@ -182,7 +188,7 @@ export function useClipComposer({ clips, bgId, frameStyle: _frameStyle, onComple
         ctx.textBaseline = 'middle'
         ctx.fillText('2026 목천청년교회 달란트마켓', CW / 2, panelY + panelH + 200)
 
-        if (performance.now() - startTime < RECORD_DURATION_MS) {
+        if (performance.now() - startTime < recordDurationMs) {
           requestAnimationFrame(drawFrame)
         } else {
           recorder.onstop = () => {
@@ -205,7 +211,7 @@ export function useClipComposer({ clips, bgId, frameStyle: _frameStyle, onComple
       console.error('[useClipComposer]', err)
       setIsComposing(false)
     }
-  }, [clips, bgId, onComplete])
+  }, [clips, clipDurations, bgId, onComplete])
 
   return { compose, isComposing, error }
 }

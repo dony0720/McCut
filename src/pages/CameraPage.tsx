@@ -15,6 +15,7 @@ export default function CameraPage() {
   const recordedChunksRef = useRef<Blob[]>([])
   const clipRecorderRef = useRef<MediaRecorder | null>(null)
   const clipChunksRef = useRef<Blob[]>([])
+  const clipStartTimeRef = useRef<number>(0)
 
   const [facing, setFacing] = useState<'user' | 'environment'>('user')
   const [isStreamReady, setIsStreamReady] = useState(false)
@@ -59,15 +60,17 @@ export default function CameraPage() {
     }
     recorder.start(100)
     clipRecorderRef.current = recorder
+    clipStartTimeRef.current = performance.now()
   }, [])
 
   const stopClipRecording = useCallback(() => {
     const recorder = clipRecorderRef.current
     if (!recorder || recorder.state === 'inactive') return
 
+    const durationMs = performance.now() - clipStartTimeRef.current
     recorder.onstop = () => {
       const blob = new Blob(clipChunksRef.current, { type: 'video/webm' })
-      addClip(blob)
+      addClip(blob, durationMs)
       clipChunksRef.current = []
     }
     recorder.stop()
