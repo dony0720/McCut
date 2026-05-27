@@ -130,7 +130,7 @@ export default function CameraPage() {
 
   return (
     <div className="h-[100dvh] bg-[#1c1814] flex flex-col items-center overflow-hidden">
-      <div className="w-full max-w-sm md:max-w-3xl flex flex-col h-full">
+      <div className="w-full box-border flex flex-col h-full">
 
         {/* ── 헤더 ── */}
         <div className="flex items-center justify-between px-4 md:px-6 pt-5 md:pt-7 pb-4 shrink-0">
