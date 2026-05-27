@@ -4,6 +4,7 @@ import RouteGuard from '@/components/RouteGuard'
 import WelcomePage from '@/pages/WelcomePage'
 import CameraPage from '@/pages/CameraPage'
 import SelectPage from '@/pages/SelectPage'
+import BgSelectPage from '@/pages/BgSelectPage'
 import FramePage from '@/pages/FramePage'
 import ResultPage from '@/pages/ResultPage'
 import SharePage from '@/pages/SharePage'
@@ -25,6 +26,16 @@ export default function App() {
             element={
               <RouteGuard require="photos">
                 <SelectPage />
+              </RouteGuard>
+            }
+          />
+
+          {/* 배경 선택 — 4장 선택이 없으면 /select 로 */}
+          <Route
+            path="/bg-select"
+            element={
+              <RouteGuard require="selection">
+                <BgSelectPage />
               </RouteGuard>
             }
           />

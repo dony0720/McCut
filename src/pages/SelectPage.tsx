@@ -133,7 +133,7 @@ export default function SelectPage() {
           </button>
 
           <button
-            onClick={() => navigate("/result")}
+            onClick={() => navigate("/bg-select")}
             disabled={!canProceed}
             className={[
               "flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full",
