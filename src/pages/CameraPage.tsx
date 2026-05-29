@@ -9,7 +9,7 @@ const TOTAL_SHOTS = 8
 
 export default function CameraPage() {
   const navigate = useNavigate()
-  const { state, addPhoto, setVideoBlob, addClip } = useApp()
+  const { state, addPhoto, addClip } = useApp()
   const webcamRef = useRef<Webcam>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const recordedChunksRef = useRef<Blob[]>([])
@@ -97,13 +97,9 @@ export default function CameraPage() {
     const recorder = mediaRecorderRef.current
     if (!recorder || recorder.state === 'inactive') return
 
-    recorder.onstop = () => {
-      const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' })
-      setVideoBlob(blob)
-    }
     recorder.stop()
     mediaRecorderRef.current = null
-  }, [setVideoBlob])
+  }, [])
 
   const handleUserMedia = useCallback(() => {
     setIsStreamReady(true)

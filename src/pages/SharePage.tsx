@@ -5,23 +5,29 @@ export default function SharePage() {
   const [searchParams] = useSearchParams()
   const imageUrl = searchParams.get('img')
   const videoUrl = searchParams.get('vid')
-  const [loading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const error = !imageUrl
 
-  function download(url: string, filename: string) {
+  async function blobDownload(url: string, filename: string) {
+    const res = await fetch(url)
+    const blob = await res.blob()
+    const blobUrl = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url
+    a.href = blobUrl
     a.download = filename
-    a.target = '_blank'
     a.click()
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000)
   }
 
-  if (loading) {
-    return (
-      <div className="h-[100dvh] bg-[#1c1814] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin" />
-      </div>
-    )
+  async function handleSave() {
+    if (!imageUrl || isSaving) return
+    setIsSaving(true)
+    try {
+      await blobDownload(imageUrl, 'mccut_photo.jpg')
+      if (videoUrl) await blobDownload(videoUrl, 'mccut_video.webm')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   if (error) {
@@ -34,53 +40,34 @@ export default function SharePage() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[#1c1814] flex flex-col items-center px-5 py-10 gap-6">
+    <div className="h-[100dvh] bg-[#1c1814] flex flex-col items-center justify-center px-5 gap-6">
 
       {/* 헤더 */}
       <div className="text-center">
         <h1 className="font-gaegu font-bold text-white text-3xl">McCut</h1>
-        <p className="text-white/40 text-sm mt-1">사진과 영상을 저장해 보세요</p>
+        <p className="text-white/40 text-sm mt-1">아래 버튼을 눌러 저장하세요</p>
       </div>
 
-      {/* 사진 미리보기 */}
-      <div className="w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl">
-        <img
-          src={imageUrl!}
-          alt="McCut 네컷 사진"
-          className="w-full block"
-        />
-      </div>
-
-      {/* 다운로드 버튼 */}
-      <div className="w-full max-w-sm flex flex-col gap-3">
-        <button
-          onClick={() => download(imageUrl!, 'mccut_photo.jpg')}
-          className="w-full py-4 rounded-2xl bg-coral text-white font-gaegu font-bold text-xl flex items-center justify-center gap-2 active:scale-95 transition-all hover:brightness-110"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      {/* 저장하기 버튼 */}
+      <button
+        onClick={handleSave}
+        disabled={isSaving}
+        className="w-full max-w-sm py-5 rounded-2xl bg-coral text-white font-gaegu font-bold text-2xl flex items-center justify-center gap-3 active:scale-95 transition-all hover:brightness-110 disabled:opacity-60"
+      >
+        {isSaving ? (
+          <div className="w-6 h-6 border-3 border-white/40 border-t-white rounded-full animate-spin" />
+        ) : (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
             <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
-          사진 저장
-        </button>
-
-        {videoUrl && (
-          <button
-            onClick={() => download(videoUrl, 'mccut_video.webm')}
-            className="w-full py-4 rounded-2xl bg-white/10 text-white font-gaegu font-bold text-xl flex items-center justify-center gap-2 active:scale-95 transition-all hover:bg-white/20 border-2 border-white/20"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="23 7 16 12 23 17 23 7"/>
-              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-            </svg>
-            영상 저장
-          </button>
         )}
-      </div>
+        {isSaving ? '저장 중…' : '저장하기'}
+      </button>
 
       {/* 하단 브랜딩 */}
-      <p className="text-white/20 text-xs mt-4">2026 목천청년교회 달란트마켓</p>
+      <p className="text-white/20 text-xs">2026 목천청년교회 달란트마켓</p>
     </div>
   )
 }
