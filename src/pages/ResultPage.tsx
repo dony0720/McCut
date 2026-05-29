@@ -4,6 +4,7 @@ import { useApp } from "@/context/AppContext";
 import { useComposer } from "@/hooks/useComposer";
 import { useClipComposer } from "@/hooks/useClipComposer";
 import { uploadResult } from "@/lib/uploadResult";
+import ShareModal from "@/components/ShareModal";
 
 /** 6자리 디스플레이 ID 생성 (세션당 고정) */
 function makeDisplayId() {
@@ -22,6 +23,7 @@ export default function ResultPage() {
   const displayId = useRef(makeDisplayId());
   const [toast, setToast] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback((msg: string) => {
@@ -97,7 +99,7 @@ export default function ResultPage() {
         videoBlob: videoBlob ?? undefined,
       })
       setShareId(result.shareId)
-      showToast('저장 완료! QR 코드를 확인하세요 ✅')
+      setShowShareModal(true)
     } catch (e) {
       console.error('[handleSave]', e)
       showToast('저장에 실패했습니다. 다시 시도해 주세요 😥')
@@ -146,6 +148,7 @@ export default function ResultPage() {
   }
 
   return (
+    <>
     <div className="h-screen bg-cream-50 flex flex-col items-center overflow-hidden relative">
       <div className="w-full box-border flex flex-col h-full">
         {/* ── 헤더 ── */}
@@ -366,5 +369,14 @@ export default function ResultPage() {
         </div>
       </div>
     </div>
+
+    {/* QR 공유 모달 */}
+    {showShareModal && state.shareId && (
+      <ShareModal
+        shareId={state.shareId}
+        onClose={() => setShowShareModal(false)}
+      />
+    )}
+    </>
   );
 }
