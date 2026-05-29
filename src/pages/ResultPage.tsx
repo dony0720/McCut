@@ -21,6 +21,7 @@ export default function ResultPage() {
   const selectedDurations = selectedIndices.map((i) => clipDurations[i] ?? 0)
 
   const displayId = useRef(makeDisplayId());
+  const pendingVideoResolveRef = useRef<((blob: Blob) => void) | null>(null)
   const [toast, setToast] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -50,9 +51,16 @@ export default function ResultPage() {
   });
 
   const handleClipComposed = useCallback((blob: Blob) => {
-    // AppContext에 저장 (저장하기 업로드 시 사용)
     setVideoBlob(blob)
 
+    // 저장하기 버튼이 영상 합성을 기다리는 중이면 resolve 후 다운로드 생략
+    if (pendingVideoResolveRef.current) {
+      pendingVideoResolveRef.current(blob)
+      pendingVideoResolveRef.current = null
+      return
+    }
+
+    // 영상 저장 버튼으로 수동 실행한 경우 → 로컬 자동 다운로드
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -89,15 +97,25 @@ export default function ResultPage() {
     a.click();
   }
 
-  // ── 저장하기 (Firebase 업로드 → shareId 저장) ──────────────────────────────
+  // ── 저장하기 (영상 합성 → 업로드 → QR) ──────────────────────────────────
   async function handleSave() {
     if (!composedImage || isUploading) return
     setIsUploading(true)
-    showToast('클라우드에 저장 중…')
     try {
+      // 영상이 아직 합성되지 않았으면 자동으로 합성 후 기다림
+      let videoToUpload = videoBlob
+      if (!videoToUpload && selectedClips.length >= 4) {
+        showToast('영상 합성 중…')
+        videoToUpload = await new Promise<Blob>((resolve) => {
+          pendingVideoResolveRef.current = resolve
+          composeClip()
+        })
+      }
+
+      showToast('클라우드에 저장 중…')
       const result = await uploadResult({
         imageDataUrl: composedImage,
-        videoBlob: videoBlob ?? undefined,
+        videoBlob: videoToUpload ?? undefined,
       })
       setShareId(result.shareId)
       setShareUrls({ imageUrl: result.imageUrl, videoUrl: result.videoUrl })
