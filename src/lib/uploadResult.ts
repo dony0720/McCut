@@ -11,17 +11,16 @@ export interface UploadResultResponse {
   videoUrl: string | null
 }
 
-/** data URL을 품질을 낮춰 재인코딩 후 Blob으로 변환 (업로드용 경량화) */
-function compressDataUrl(dataUrl: string, quality = 0.75): Promise<Blob> {
+/** data URL → Blob 변환 (원본 해상도 유지, JPEG quality 0.92) */
+function dataUrlToBlob(dataUrl: string): Promise<Blob> {
   return new Promise((resolve) => {
     const img = new Image()
     img.onload = () => {
-      const scale  = 0.5
       const canvas = document.createElement('canvas')
-      canvas.width  = Math.round(img.width  * scale)
-      canvas.height = Math.round(img.height * scale)
-      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
-      canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', quality)
+      canvas.width  = img.width
+      canvas.height = img.height
+      canvas.getContext('2d')!.drawImage(img, 0, 0)
+      canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.92)
     }
     img.src = dataUrl
   })
@@ -40,8 +39,7 @@ export async function uploadResult({
   // 고유 shareId 생성
   const shareId = crypto.randomUUID()
 
-  // 이미지 압축
-  const imageBlob = await compressDataUrl(imageDataUrl, 0.75)
+  const imageBlob = await dataUrlToBlob(imageDataUrl)
 
   // 이미지 + 영상 병렬 업로드
   const imagePath = `${shareId}/photo.jpg`
