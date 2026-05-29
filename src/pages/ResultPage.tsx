@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
 import { useComposer } from "@/hooks/useComposer";
 import { useClipComposer } from "@/hooks/useClipComposer";
+import { uploadResult } from "@/lib/uploadResult";
 
 /** 6자리 디스플레이 ID 생성 (세션당 고정) */
 function makeDisplayId() {
@@ -11,8 +12,8 @@ function makeDisplayId() {
 
 export default function ResultPage() {
   const navigate = useNavigate();
-  const { state, setComposedImage, reset } = useApp();
-  const { capturedPhotos, selectedIndices, frameStyle, bgId, composedImage, clipBlobs, clipDurations } =
+  const { state, setComposedImage, setVideoBlob, setShareId, reset } = useApp();
+  const { capturedPhotos, selectedIndices, frameStyle, bgId, composedImage, videoBlob, clipBlobs, clipDurations } =
     state;
 
   const selectedClips = selectedIndices.map((i) => clipBlobs[i]).filter(Boolean) as Blob[]
@@ -20,6 +21,7 @@ export default function ResultPage() {
 
   const displayId = useRef(makeDisplayId());
   const [toast, setToast] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback((msg: string) => {
@@ -45,6 +47,9 @@ export default function ResultPage() {
   });
 
   const handleClipComposed = useCallback((blob: Blob) => {
+    // AppContext에 저장 (저장하기 업로드 시 사용)
+    setVideoBlob(blob)
+
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -54,7 +59,7 @@ export default function ResultPage() {
     document.body.removeChild(a)
     setTimeout(() => URL.revokeObjectURL(url), 1000)
     showToast('영상이 저장되었습니다 🎬')
-  }, [showToast])
+  }, [showToast, setVideoBlob])
 
   const { compose: composeClip, isComposing: isComposingClip } = useClipComposer({
     clips: selectedClips,
@@ -81,10 +86,24 @@ export default function ResultPage() {
     a.click();
   }
 
-  // ── 저장하기 ──────────────────────────────────────────────────────────────
-  function handleSave() {
-    downloadImage();
-    showToast("이미지가 저장되었습니다 📷");
+  // ── 저장하기 (Firebase 업로드 → shareId 저장) ──────────────────────────────
+  async function handleSave() {
+    if (!composedImage || isUploading) return
+    setIsUploading(true)
+    showToast('클라우드에 저장 중…')
+    try {
+      const result = await uploadResult({
+        imageDataUrl: composedImage,
+        videoBlob: videoBlob ?? undefined,
+      })
+      setShareId(result.shareId)
+      showToast('저장 완료! QR 코드를 확인하세요 ✅')
+    } catch (e) {
+      console.error('[handleSave]', e)
+      showToast('저장에 실패했습니다. 다시 시도해 주세요 😥')
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   // ── 공유 ──────────────────────────────────────────────────────────────────
@@ -310,30 +329,39 @@ export default function ResultPage() {
           {/* 저장하기 */}
           <button
             onClick={handleSave}
-            disabled={!composedImage}
+            disabled={!composedImage || isUploading}
             className={[
               "flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full",
               "font-semibold text-base md:text-lg transition-all",
-              composedImage
+              composedImage && !isUploading
                 ? "bg-coral text-white hover:brightness-110 active:scale-95"
                 : "bg-coral/40 text-white/70 cursor-not-allowed",
             ].join(" ")}
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            저장하기
+            {isUploading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                저장 중…
+              </>
+            ) : (
+              <>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                저장하기
+              </>
+            )}
           </button>
         </div>
       </div>
