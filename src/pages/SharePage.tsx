@@ -18,13 +18,15 @@ export default function SharePage() {
   useEffect(() => {
     if (!id) { setError(true); setLoading(false); return }
 
+    console.log('[SharePage] querying id:', id)
     supabase
       .from('results')
       .select('*')
       .eq('id', id)
       .maybeSingle()
       .then(({ data: row, error: err }) => {
-        if (err) { console.error('[SharePage]', err) }
+        console.log('[SharePage] result:', { row, err })
+        if (err) { console.error('[SharePage] error:', err) }
         if (!row) { setError(true) }
         else { setData(row as ResultRecord) }
         setLoading(false)
