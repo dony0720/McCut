@@ -2,12 +2,15 @@ import { useEffect, useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
 
 interface ShareModalProps {
-  shareId: string;
+  imageUrl: string
+  videoUrl?: string | null
   onClose: () => void;
 }
 
-export default function ShareModal({ shareId, onClose }: ShareModalProps) {
-  const shareUrl = `${window.location.origin}/share/${shareId}`;
+export default function ShareModal({ imageUrl, videoUrl, onClose }: ShareModalProps) {
+  const params = new URLSearchParams({ img: imageUrl })
+  if (videoUrl) params.set('vid', videoUrl)
+  const shareUrl = `${window.location.origin}/share?${params.toString()}`
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // 바깥 클릭 시 닫기

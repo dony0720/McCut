@@ -1,35 +1,12 @@
-import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
-
-interface ResultRecord {
-  id: string
-  image_url: string
-  video_url: string | null
-  created_at: string
-}
+import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 export default function SharePage() {
-  const { id } = useParams<{ id: string }>()
-  const [data, setData]       = useState<ResultRecord | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(false)
-
-  useEffect(() => {
-    if (!id) { setError(true); setLoading(false); return }
-
-    supabase
-      .from('results')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle()
-      .then(({ data: row, error: err }) => {
-        if (err) { console.error('[SharePage]', err) }
-        if (!row) { setError(true) }
-        else { setData(row as ResultRecord) }
-        setLoading(false)
-      })
-  }, [id])
+  const [searchParams] = useSearchParams()
+  const imageUrl = searchParams.get('img')
+  const videoUrl = searchParams.get('vid')
+  const [loading] = useState(false)
+  const error = !imageUrl
 
   function download(url: string, filename: string) {
     const a = document.createElement('a')
@@ -39,7 +16,6 @@ export default function SharePage() {
     a.click()
   }
 
-  // ── 로딩 ──
   if (loading) {
     return (
       <div className="h-[100dvh] bg-[#1c1814] flex items-center justify-center">
@@ -48,8 +24,7 @@ export default function SharePage() {
     )
   }
 
-  // ── 에러 ──
-  if (error || !data) {
+  if (error) {
     return (
       <div className="h-[100dvh] bg-[#1c1814] flex flex-col items-center justify-center gap-4 px-8 text-center">
         <p className="text-white/60 text-lg font-gaegu">링크를 찾을 수 없어요</p>
@@ -70,7 +45,7 @@ export default function SharePage() {
       {/* 사진 미리보기 */}
       <div className="w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl">
         <img
-          src={data.image_url}
+          src={imageUrl!}
           alt="McCut 네컷 사진"
           className="w-full block"
         />
@@ -79,7 +54,7 @@ export default function SharePage() {
       {/* 다운로드 버튼 */}
       <div className="w-full max-w-sm flex flex-col gap-3">
         <button
-          onClick={() => download(data.image_url, 'mccut_photo.jpg')}
+          onClick={() => download(imageUrl!, 'mccut_photo.jpg')}
           className="w-full py-4 rounded-2xl bg-coral text-white font-gaegu font-bold text-xl flex items-center justify-center gap-2 active:scale-95 transition-all hover:brightness-110"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -90,9 +65,9 @@ export default function SharePage() {
           사진 저장
         </button>
 
-        {data.video_url && (
+        {videoUrl && (
           <button
-            onClick={() => download(data.video_url!, 'mccut_video.webm')}
+            onClick={() => download(videoUrl, 'mccut_video.webm')}
             className="w-full py-4 rounded-2xl bg-white/10 text-white font-gaegu font-bold text-xl flex items-center justify-center gap-2 active:scale-95 transition-all hover:bg-white/20 border-2 border-white/20"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
