@@ -22,9 +22,10 @@ export default function SharePage() {
       .from('results')
       .select('*')
       .eq('id', id)
-      .single()
+      .maybeSingle()
       .then(({ data: row, error: err }) => {
-        if (err || !row) { setError(true) }
+        if (err) { console.error('[SharePage]', err) }
+        if (!row) { setError(true) }
         else { setData(row as ResultRecord) }
         setLoading(false)
       })
