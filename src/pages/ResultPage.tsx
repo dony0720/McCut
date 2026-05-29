@@ -24,6 +24,7 @@ export default function ResultPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [shareUrls, setShareUrls] = useState<{ imageUrl: string; videoUrl: string | null } | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback((msg: string) => {
@@ -99,6 +100,7 @@ export default function ResultPage() {
         videoBlob: videoBlob ?? undefined,
       })
       setShareId(result.shareId)
+      setShareUrls({ imageUrl: result.imageUrl, videoUrl: result.videoUrl })
       setShowShareModal(true)
     } catch (e) {
       console.error('[handleSave]', e)
@@ -371,9 +373,10 @@ export default function ResultPage() {
     </div>
 
     {/* QR 공유 모달 */}
-    {showShareModal && state.shareId && (
+    {showShareModal && shareUrls && (
       <ShareModal
-        shareId={state.shareId}
+        imageUrl={shareUrls.imageUrl}
+        videoUrl={shareUrls.videoUrl}
         onClose={() => setShowShareModal(false)}
       />
     )}

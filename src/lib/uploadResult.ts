@@ -68,12 +68,5 @@ export async function uploadResult({
   const imageUrl = getPublicUrl('results', imagePath)
   const videoUrl = videoBlob ? getPublicUrl('results', videoPath) : null
 
-  // Supabase DB에 메타데이터 저장
-  const { error: dbError } = await supabase
-    .from('results')
-    .insert({ id: shareId, image_url: imageUrl, video_url: videoUrl })
-
-  if (dbError) throw dbError
-
   return { shareId, imageUrl, videoUrl }
 }

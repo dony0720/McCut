@@ -61,7 +61,7 @@ export default function App() {
           />
 
           {/* QR 공유 — 독립 접근 가능 */}
-          <Route path="/share/:id" element={<SharePage />} />
+          <Route path="/share" element={<SharePage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
