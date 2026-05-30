@@ -25,7 +25,7 @@ export default function ResultPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [shareUrls, setShareUrls] = useState<{ imageUrl: string; videoUrl: string | null } | null>(null)
+  const [shareImageUrl, setShareImageUrl] = useState<string | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback((msg: string) => {
@@ -72,7 +72,7 @@ export default function ResultPage() {
     showToast('영상이 저장되었습니다 🎬')
   }, [showToast, setVideoBlob])
 
-  const { compose: composeClip, isComposing: isComposingClip } = useClipComposer({
+  const { compose: composeClip } = useClipComposer({
     clips: selectedClips,
     clipDurations: selectedDurations,
     bgId,
@@ -87,15 +87,6 @@ export default function ResultPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // ── 이미지 다운로드 헬퍼 ──────────────────────────────────────────────────
-  function downloadImage() {
-    if (!composedImage) return;
-    const a = document.createElement("a");
-    a.href = composedImage;
-    a.download = `mccut_${displayId.current}.jpg`;
-    a.click();
-  }
 
   // ── 저장하기 (영상 합성 → 업로드 → QR) ──────────────────────────────────
   async function handleSave() {
@@ -118,7 +109,7 @@ export default function ResultPage() {
         videoBlob: videoToUpload ?? undefined,
       })
       setShareId(result.shareId)
-      setShareUrls({ imageUrl: result.imageUrl, videoUrl: result.videoUrl })
+      setShareImageUrl(result.imageUrl)
       setShowShareModal(true)
     } catch (e) {
       console.error('[handleSave]', e)
@@ -126,39 +117,6 @@ export default function ResultPage() {
     } finally {
       setIsUploading(false)
     }
-  }
-
-  // ── 공유 ──────────────────────────────────────────────────────────────────
-  async function handleShare() {
-    if (!composedImage) return;
-
-    // 1순위: Web Share API (iOS · Android 네이티브 공유 시트)
-    if (navigator.share && navigator.canShare) {
-      try {
-        const blob = await (await fetch(composedImage)).blob();
-        const file = new File([blob], `mccut_${displayId.current}.jpg`, {
-          type: "image/jpeg",
-        });
-        if (navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: "McCut 사진" });
-          return;
-        }
-      } catch (e) {
-        // 사용자가 공유 취소한 경우 AbortError — 아무것도 하지 않음
-        if (e instanceof DOMException && e.name === "AbortError") return;
-      }
-    }
-
-    // 2순위: 이미지 직접 다운로드 + 안내 토스트
-    // (URL 공유는 세션 상태에 의존하므로 의미 없음)
-    downloadImage();
-    showToast("이미지를 저장했습니다. 갤러리에서 공유해주세요 😊");
-  }
-
-  // ── 영상 저장 ─────────────────────────────────────────────────────────────
-  function handleVideoSave() {
-    if (selectedClips.length < 4 || isComposingClip) return
-    composeClip()
   }
 
   // ── 다시 찍기 ─────────────────────────────────────────────────────────────
@@ -272,84 +230,16 @@ export default function ResultPage() {
         )}
 
         {/* ── 하단 버튼 ── */}
-        <div className="shrink-0 px-4 md:px-6 pt-4 pb-10 md:pb-12 flex gap-3 bg-cream-50 border-t border-ink/10">
-          {/* 다시 */}
+        <div className="shrink-0 px-4 md:px-6 pt-4 pb-10 md:pb-12 bg-cream-50 border-t border-ink/10 flex flex-row gap-3">
           <button
-            onClick={handleReset}
-            className="flex items-center gap-2 px-4 py-3.5 rounded-full border-2 border-ink/20 bg-white text-ink font-semibold text-sm md:text-base transition-all active:scale-95 hover:bg-ink/5 shrink-0"
+            onClick={() => navigate('/bg-select')}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full border-2 border-ink/20 bg-white text-ink font-semibold text-sm md:text-base transition-all active:scale-95 hover:bg-ink/5"
           >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-              <path d="M3 3v5h5" />
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
             </svg>
-            다시
+            배경 다시 고르기
           </button>
-
-          {/* 공유 */}
-          <button
-            onClick={handleShare}
-            disabled={!composedImage}
-            className="flex items-center gap-2 px-4 py-3.5 rounded-full border-2 border-ink/20 bg-white text-ink font-semibold text-sm md:text-base transition-all active:scale-95 hover:bg-ink/5 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="18" cy="5" r="3" />
-              <circle cx="6" cy="12" r="3" />
-              <circle cx="18" cy="19" r="3" />
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-            </svg>
-            공유
-          </button>
-
-          {/* 영상 저장 — 선택된 클립 4개 있을 때만 표시 */}
-          {selectedClips.length === 4 && (
-            <button
-              onClick={handleVideoSave}
-              disabled={isComposingClip}
-              className={[
-                'flex items-center gap-2 px-4 py-3.5 rounded-full border-2 transition-all shrink-0',
-                'font-semibold text-sm md:text-base',
-                isComposingClip
-                  ? 'border-ink/10 bg-ink/5 text-ink/40 cursor-not-allowed'
-                  : 'border-ink/20 bg-white text-ink active:scale-95 hover:bg-ink/5',
-              ].join(' ')}
-            >
-              {isComposingClip ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-ink/30 border-t-ink/70 rounded-full animate-spin" />
-                  합성 중…
-                </>
-              ) : (
-                <>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="23 7 16 12 23 17 23 7" />
-                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-                  </svg>
-                  영상
-                </>
-              )}
-            </button>
-          )}
-
-          {/* 저장하기 */}
           <button
             onClick={handleSave}
             disabled={!composedImage || isUploading}
@@ -368,16 +258,7 @@ export default function ResultPage() {
               </>
             ) : (
               <>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
@@ -391,10 +272,9 @@ export default function ResultPage() {
     </div>
 
     {/* QR 공유 모달 */}
-    {showShareModal && shareUrls && (
+    {showShareModal && shareImageUrl && (
       <ShareModal
-        imageUrl={shareUrls.imageUrl}
-        videoUrl={shareUrls.videoUrl}
+        imageUrl={shareImageUrl}
         onClose={() => setShowShareModal(false)}
       />
     )}
