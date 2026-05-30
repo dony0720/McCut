@@ -26,6 +26,7 @@ export default function ResultPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareImageUrl, setShareImageUrl] = useState<string | null>(null)
+  const [shareVideoUrl, setShareVideoUrl] = useState<string | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback((msg: string) => {
@@ -110,6 +111,7 @@ export default function ResultPage() {
       })
       setShareId(result.shareId)
       setShareImageUrl(result.imageUrl)
+      setShareVideoUrl(result.videoUrl)
       setShowShareModal(true)
     } catch (e) {
       console.error('[handleSave]', e)
@@ -275,6 +277,7 @@ export default function ResultPage() {
     {showShareModal && shareImageUrl && (
       <ShareModal
         imageUrl={shareImageUrl}
+        videoUrl={shareVideoUrl}
         onClose={() => setShowShareModal(false)}
       />
     )}

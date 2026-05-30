@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import IconBox from "@/components/IconBox";
 import { useApp } from "@/context/AppContext";
+import TimerModal from "@/components/TimerModal";
 
 export default function WelcomePage() {
   const navigate = useNavigate();
-  const { reset } = useApp();
+  const { reset, state } = useApp();
+  const [showTimerModal, setShowTimerModal] = useState(false);
 
   function handleStart() {
     reset();
@@ -94,68 +97,38 @@ export default function WelcomePage() {
       {/* 하단 탭바 */}
       <div className="anim-tabbar w-full box-border border-t-[2px] border-ink/10 bg-cream-100">
         <div className="flex items-center justify-around px-4 py-3 md:py-5">
-          {/* store */}
-          <button className="flex flex-col items-center gap-1 opacity-40 transition-opacity hover:opacity-60">
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-ink md:w-7 md:h-7"
-            >
-              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 0 1-8 0" />
-            </svg>
-            <span className="text-ink text-[0.6rem] md:text-xs tracking-widest">
-              tabs.store
-            </span>
-          </button>
-
           {/* home — active */}
           <button className="flex flex-col items-center gap-1 transition-opacity">
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="text-ink md:w-7 md:h-7"
-            >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" className="text-ink md:w-7 md:h-7">
               <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
             </svg>
-            <span className="text-ink text-[0.6rem] md:text-xs font-bold tracking-widest">
-              tabs.home
-            </span>
+            <span className="text-ink text-[0.6rem] md:text-xs font-bold tracking-widest">home</span>
             <div className="w-6 h-[3px] bg-ink rounded-full -mt-1" />
           </button>
 
-          {/* gallery */}
-          <button className="flex flex-col items-center gap-1 opacity-40 transition-opacity hover:opacity-60">
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-ink md:w-7 md:h-7"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <polyline points="21 15 16 10 5 21" />
-            </svg>
-            <span className="text-ink text-[0.6rem] md:text-xs tracking-widest">
-              tabs.gallery
-            </span>
+          {/* timer settings */}
+          <button
+            onClick={() => setShowTimerModal(true)}
+            className="flex flex-col items-center gap-1 opacity-40 transition-opacity hover:opacity-70 active:opacity-100"
+          >
+            <div className="relative">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink md:w-7 md:h-7">
+                <circle cx="12" cy="13" r="8"/>
+                <path d="M12 9v4l2 2"/>
+                <path d="M5 3 2 6M22 6l-3-3M6.38 18.7 4 21M17.64 18.67 20 21"/>
+              </svg>
+              {/* 현재 타이머 뱃지 */}
+              <span className="absolute -top-1.5 -right-2.5 bg-coral text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                {state.timerSeconds}
+              </span>
+            </div>
+            <span className="text-ink text-[0.6rem] md:text-xs tracking-widest">timer</span>
           </button>
         </div>
       </div>
+
+      {/* 타이머 설정 모달 */}
+      {showTimerModal && <TimerModal onClose={() => setShowTimerModal(false)} />}
     </div>
   );
 }

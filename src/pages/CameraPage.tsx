@@ -10,6 +10,7 @@ const TOTAL_SHOTS = 8
 export default function CameraPage() {
   const navigate = useNavigate()
   const { state, addPhoto, addClip } = useApp()
+  const { timerSeconds } = state
   const webcamRef = useRef<Webcam>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const recordedChunksRef = useRef<Blob[]>([])
@@ -182,7 +183,7 @@ export default function CameraPage() {
   })
 
   const { count, start: startCountdown, cancel: cancelCountdown, isRunning } = useCountdown({
-    from: 3,
+    from: timerSeconds,
     onComplete: handleCountdownComplete,
   })
 
@@ -316,7 +317,7 @@ export default function CameraPage() {
                   audio={false}
                   screenshotFormat="image/jpeg"
                   screenshotQuality={0.92}
-                  mirrored={facing === 'user'}
+                  mirrored={false}
                   videoConstraints={{ facingMode: { ideal: facing } }}
                   onUserMedia={handleUserMedia}
                   onUserMediaError={handleUserMediaError}
