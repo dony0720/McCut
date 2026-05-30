@@ -83,7 +83,7 @@ export default function BgSelectPage() {
           {/* 배경 고르기 */}
           <button
             onClick={() => setIsBgPickerOpen(true)}
-            className="flex items-center gap-2 px-5 py-3.5 rounded-full border-2 border-white/30 bg-white/10 text-white font-gaegu font-bold text-base md:text-lg transition-all active:scale-95 hover:bg-white/20 shrink-0"
+            className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full border-2 border-white/30 bg-white/10 text-white font-gaegu font-bold text-base md:text-lg transition-all active:scale-95 hover:bg-white/20"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3"/>
