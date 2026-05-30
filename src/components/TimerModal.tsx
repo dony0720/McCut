@@ -29,8 +29,6 @@ export default function TimerModal({ onClose }: TimerModalProps) {
     if (!el) return
 
     let rafId: number
-    let lastScrollTop = -1
-
     function onScroll() {
       cancelAnimationFrame(rafId)
       rafId = requestAnimationFrame(() => {
@@ -51,7 +49,6 @@ export default function TimerModal({ onClose }: TimerModalProps) {
         const clamped = Math.max(0, Math.min(OPTIONS.length - 1, idx))
         el.scrollTo({ top: clamped * ITEM_H, behavior: 'smooth' })
         setSelected(OPTIONS[clamped])
-        lastScrollTop = el.scrollTop
       }, 80)
     }
 
