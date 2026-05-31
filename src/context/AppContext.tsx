@@ -21,6 +21,7 @@ const initialState: AppState = {
   clipBlobs: [],
   clipDurations: [],
   shareId: null,
+  timerSeconds: 3,
 }
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
@@ -37,6 +38,7 @@ type Action =
   | { type: 'SET_VIDEO_BLOB'; payload: Blob }
   | { type: 'ADD_CLIP'; payload: { blob: Blob; durationMs: number } }
   | { type: 'SET_SHARE_ID'; payload: string }
+  | { type: 'SET_TIMER_SECONDS'; payload: number }
   | { type: 'RESET' }
 
 // ─── Reducer ──────────────────────────────────────────────────────────────────
@@ -87,8 +89,11 @@ function reducer(state: AppState, action: Action): AppState {
     case 'SET_SHARE_ID':
       return { ...state, shareId: action.payload }
 
+    case 'SET_TIMER_SECONDS':
+      return { ...state, timerSeconds: action.payload }
+
     case 'RESET':
-      return initialState
+      return { ...initialState, timerSeconds: state.timerSeconds }
 
     default:
       return state
@@ -110,6 +115,7 @@ interface AppContextValue {
   setVideoBlob: (blob: Blob) => void
   addClip: (blob: Blob, durationMs: number) => void
   setShareId: (id: string) => void
+  setTimerSeconds: (seconds: number) => void
   reset: () => void
 }
 
@@ -164,13 +170,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_SHARE_ID', payload: id })
   }, [])
 
+  const setTimerSeconds = useCallback((seconds: number) => {
+    dispatch({ type: 'SET_TIMER_SECONDS', payload: seconds })
+  }, [])
+
   const reset = useCallback(() => {
     dispatch({ type: 'RESET' })
   }, [])
 
   return (
     <AppContext.Provider
-      value={{ state, addPhoto, setPhotos, toggleSelect, clearSelection, resetPhotos, setFrameStyle, setBgId, setComposedImage, setVideoBlob, addClip, setShareId, reset }}
+      value={{ state, addPhoto, setPhotos, toggleSelect, clearSelection, resetPhotos, setFrameStyle, setBgId, setComposedImage, setVideoBlob, addClip, setShareId, setTimerSeconds, reset }}
     >
       {children}
     </AppContext.Provider>

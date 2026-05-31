@@ -20,4 +20,6 @@ export interface AppState {
   clipDurations: number[]
   /** 공유용 고유 ID */
   shareId: string | null
+  /** 카운트다운 타이머 (초) — 클립 길이 = 영상 길이와 동일 */
+  timerSeconds: number
 }

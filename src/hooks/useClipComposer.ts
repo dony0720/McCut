@@ -69,6 +69,7 @@ function drawVideoCrop(
   video: HTMLVideoElement,
   cell: { x: number; y: number; w: number; h: number },
   radius = 16,
+  mirror = true,
 ) {
   const { x: dx, y: dy, w: dw, h: dh } = cell
   const vw = video.videoWidth || dw
@@ -84,7 +85,14 @@ function drawVideoCrop(
   ctx.beginPath()
   ctx.roundRect(dx, dy, dw, dh, radius)
   ctx.clip()
-  ctx.drawImage(video, sx, sy, sw, sh, dx, dy, dw, dh)
+  if (mirror) {
+    // 사진과 동일하게 좌우반전
+    ctx.translate(dx + dw, dy)
+    ctx.scale(-1, 1)
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, dw, dh)
+  } else {
+    ctx.drawImage(video, sx, sy, sw, sh, dx, dy, dw, dh)
+  }
   ctx.restore()
 }
 
@@ -173,7 +181,7 @@ export function useClipComposer({ clips, clipDurations, bgId, frameStyle: _frame
 
         // 2. 비디오 4개
         videos.forEach((video, i) => {
-          if (cells[i]) drawVideoCrop(ctx, video, cells[i])
+          if (cells[i]) drawVideoCrop(ctx, video, cells[i], 16, false)
         })
 
         // 3. 로고 (우상단)

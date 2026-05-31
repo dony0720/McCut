@@ -5,6 +5,8 @@ export default function SharePage() {
   const [searchParams] = useSearchParams()
   const imageUrl = searchParams.get('img')
   const videoUrl = searchParams.get('vid')
+  const [isSavingPhoto, setIsSavingPhoto] = useState(false)
+  const [isSavingVideo, setIsSavingVideo] = useState(false)
   const error = !imageUrl
 
   async function blobDownload(url: string, filename: string) {
@@ -17,9 +19,6 @@ export default function SharePage() {
     a.click()
     setTimeout(() => URL.revokeObjectURL(blobUrl), 1000)
   }
-
-  const [isSavingPhoto, setIsSavingPhoto] = useState(false)
-  const [isSavingVideo, setIsSavingVideo] = useState(false)
 
   async function handleSavePhoto() {
     if (!imageUrl || isSavingPhoto) return
@@ -47,8 +46,7 @@ export default function SharePage() {
   return (
     <div className="h-[100dvh] bg-[#1c1814] flex flex-col items-center justify-center px-5 gap-4">
 
-      {/* 헤더 */}
-      <div className="text-center mb-2">
+      <div className="text-center">
         <h1 className="font-gaegu font-bold text-white text-3xl">McCut</h1>
         <p className="text-white/40 text-sm mt-1">아래 버튼을 눌러 저장하세요</p>
       </div>
@@ -89,7 +87,6 @@ export default function SharePage() {
         </button>
       )}
 
-      {/* 하단 브랜딩 */}
       <p className="text-white/20 text-xs mt-2">2026 목천청년교회 달란트마켓</p>
     </div>
   )
